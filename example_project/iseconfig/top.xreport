@@ -1,11 +1,11 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <report-views version="2.0" >
  <header>
-  <DateModified>2014-01-21T12:42:45</DateModified>
+  <DateModified>2014-01-28T14:55:50</DateModified>
   <ModuleName>top</ModuleName>
   <SummaryTimeStamp>Unknown</SummaryTimeStamp>
   <SavedFilePath>/home/jg/blueshell/raw_tree/bluetree/example_project/iseconfig/top.xreport</SavedFilePath>
-  <ImplementationReportsDirectory>/home/jg/blueshell/raw_tree/bluetree/example_project</ImplementationReportsDirectory>
+  <ImplementationReportsDirectory>/home/jg/blueshell/raw_tree/bluetree/example_project/</ImplementationReportsDirectory>
   <DateInitialized>2014-01-21T12:42:45</DateInitialized>
   <EnableMessageFiltering>false</EnableMessageFiltering>
  </header>

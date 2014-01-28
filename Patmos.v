@@ -1,18 +1,16 @@
 module MCacheCtrl(input clk, input reset,
     input  io_ena_in,
     output io_fetch_ena,
-    output io_mcache_ctrlrepl_w_enable,
-    output[31:0] io_mcache_ctrlrepl_w_data,
-    output[31:0] io_mcache_ctrlrepl_w_addr,
-    output io_mcache_ctrlrepl_w_tag,
-    output[9:0] io_mcache_ctrlrepl_address,
-    output io_mcache_ctrlrepl_instr_stall,
+    output io_mcache_ctrlrepl_wEna,
+    output[31:0] io_mcache_ctrlrepl_wData,
+    output[31:0] io_mcache_ctrlrepl_wAddr,
+    output io_mcache_ctrlrepl_wTag,
+    output[9:0] io_mcache_ctrlrepl_addrEven,
+    output[9:0] io_mcache_ctrlrepl_addrOdd,
+    output io_mcache_ctrlrepl_instrStall,
     input  io_mcache_replctrl_hit,
-    input [10:0] io_mcache_replctrl_pos_offset,
-    input [31:0] io_femcache_address,
-    input  io_femcache_request,
-    input  io_femcache_doCallRet,
-    input [31:0] io_femcache_callRetBase,
+    input [31:0] io_femcache_addrEven,
+    input [31:0] io_femcache_addrOdd,
     input  io_exmcache_doCallRet,
     input [31:0] io_exmcache_callRetBase,
     input [31:0] io_exmcache_callRetAddr,
@@ -30,51 +28,51 @@ module MCacheCtrl(input clk, input reset,
   wire[31:0] T0;
   wire[31:0] T1;
   wire[33:0] T2;
-  wire[31:0] ext_mem_addr;
+  wire[31:0] ocpAddr;
   wire[31:0] T3;
   wire[31:0] T4;
   wire[31:0] T5;
   wire[31:0] T6;
   wire[31:0] T7;
-  wire[29:0] T8;
-  wire[31:0] msize_addr;
-  wire[31:0] T9;
+  wire[31:0] T8;
+  wire[29:0] T9;
+  wire[31:0] msizeAddr;
+  wire[31:0] T10;
   reg[31:0] callRetBaseReg;
-  wire T10;
   wire T11;
   wire T12;
   wire T13;
-  reg[2:0] mcache_state;
   wire T14;
+  reg[2:0] mcacheState;
   wire T15;
   wire T16;
   wire T17;
   wire T18;
   wire T19;
-  reg[9:0] ext_mem_tsize;
   wire T20;
+  reg[9:0] transferSizeReg;
   wire T21;
-  wire[1:0] T22;
-  reg[1:0] ext_mem_burst_cnt;
-  wire T23;
+  wire T22;
+  wire[1:0] T23;
+  reg[1:0] burstCntReg;
   wire T24;
   wire T25;
   wire T26;
   wire T27;
-  wire[9:0] T28;
+  wire T28;
   wire[9:0] T29;
-  reg[9:0] ext_mem_fcounter;
-  wire T30;
+  wire[9:0] T30;
+  reg[9:0] fetchCntReg;
   wire T31;
   wire T32;
-  reg[1:0] ocpSlaveReg_Resp;
   wire T33;
+  reg[1:0] ocpSlaveReg_Resp;
   wire T34;
-  wire[9:0] T35;
+  wire T35;
   wire[9:0] T36;
   wire[9:0] T37;
   wire[9:0] T38;
-  wire T39;
+  wire[9:0] T39;
   wire T40;
   wire T41;
   wire T42;
@@ -82,7 +80,7 @@ module MCacheCtrl(input clk, input reset,
   wire T44;
   wire T45;
   wire T46;
-  wire[1:0] T47;
+  wire T47;
   wire[1:0] T48;
   wire[1:0] T49;
   wire[1:0] T50;
@@ -93,51 +91,67 @@ module MCacheCtrl(input clk, input reset,
   wire[1:0] T55;
   wire[1:0] T56;
   wire[1:0] T57;
-  wire[9:0] T58;
-  wire[10:0] T59;
+  wire[1:0] T58;
+  wire[9:0] T59;
+  wire[10:0] T60;
   reg[31:0] ocpSlaveReg_Data;
-  wire T60;
   wire T61;
   wire T62;
   wire T63;
-  wire[2:0] T64;
-  wire[2:0] T65;
-  wire[2:0] T66;
-  wire[2:0] T67;
-  wire[31:0] T68;
-  wire[31:0] T69;
-  wire[31:0] T70;
-  wire[31:0] T71;
-  wire[2:0] ext_mem_cmd;
+  wire T64;
+  wire T65;
+  wire T66;
+  wire T67;
+  wire T68;
+  wire T69;
+  wire T70;
+  wire[2:0] T71;
   wire[2:0] T72;
   wire[2:0] T73;
   wire[2:0] T74;
-  wire T75;
-  wire[9:0] T76;
-  wire[31:0] mcachemem_address;
-  wire[31:0] T77;
+  wire[2:0] T75;
+  wire[31:0] T76;
+  wire[29:0] T77;
   wire[31:0] T78;
-  reg[31:0] addrReg;
-  wire T79;
-  wire mcachemem_w_tag;
-  wire[31:0] mcachemem_w_addr;
+  wire[31:0] T79;
   wire[31:0] T80;
   wire[31:0] T81;
-  wire[31:0] T82;
-  wire[31:0] T83;
-  wire[31:0] mcachemem_w_data;
-  wire[31:0] T84;
-  wire[31:0] T85;
-  wire[10:0] T86;
-  wire[10:0] T87;
-  wire[10:0] T88;
-  wire[10:0] T89;
+  wire[2:0] ocpCmd;
+  wire[2:0] T82;
+  wire[2:0] T83;
+  wire[2:0] T84;
+  wire[2:0] T85;
+  wire T86;
+  wire[9:0] T87;
+  wire[31:0] addrOdd;
+  wire[31:0] T88;
+  wire[31:0] T89;
+  reg[31:0] addrOddReg;
   wire T90;
-  wire mcachemem_w_enable;
-  wire T91;
-  reg[0:0] wenaReg;
-  wire T92;
-  wire T93;
+  wire[9:0] T91;
+  wire[31:0] addrEven;
+  wire[31:0] T92;
+  wire[31:0] T93;
+  reg[31:0] addrEvenReg;
+  wire wTag;
+  wire[31:0] wAddr;
+  wire[31:0] T94;
+  wire[31:0] T95;
+  wire[31:0] T96;
+  wire[31:0] T97;
+  wire[31:0] wData;
+  wire[31:0] T98;
+  wire[31:0] T99;
+  wire[10:0] T100;
+  wire[10:0] T101;
+  wire[10:0] T102;
+  wire[10:0] T103;
+  wire T104;
+  wire wEna;
+  wire fetchEna;
+  wire T105;
+  wire T106;
+  wire T107;
 
   assign io_ocp_port_M_DataByteEn = 4'b1111/* 0*/;
   assign io_ocp_port_M_DataValid = 1'h0/* 0*/;
@@ -145,114 +159,131 @@ module MCacheCtrl(input clk, input reset,
   assign T0 = {31'h0/* 0*/, 1'h0/* 0*/};
   assign io_ocp_port_M_Addr = T1;
   assign T1 = T2[5'h1f/* 31*/:1'h0/* 0*/];
-  assign T2 = {ext_mem_addr, 2'b00/* 0*/};
-  assign ext_mem_addr = T3;
-  assign T3 = T24 ? T68 : T4;
-  assign T4 = T41 ? callRetBaseReg : T5;
-  assign T5 = T10 ? T7 : T6;
-  assign T6 = {31'h0/* 0*/, 1'h0/* 0*/};
-  assign T7 = {T8, 2'b00/* 0*/};
-  assign T8 = msize_addr[5'h1f/* 31*/:2'h2/* 2*/];
-  assign msize_addr = callRetBaseReg - T9;
-  assign T9 = {31'h0/* 0*/, 1'h1/* 1*/};
-  assign T10 = T13 && T11;
-  assign T11 = ! T12;
-  assign T12 = io_mcache_replctrl_hit == 1'h1/* 1*/;
-  assign T13 = mcache_state == 3'h1/* 1*/;
-  assign T14 = T16 || T15;
-  assign T15 = mcache_state == 3'h4/* 4*/;
-  assign T16 = T60 || T17;
-  assign T17 = T34 && T18;
-  assign T18 = ! T19;
-  assign T19 = ext_mem_fcounter < ext_mem_tsize;
-  assign T20 = T44 && T21;
-  assign T21 = ext_mem_burst_cnt == T22;
-  assign T22 = msize_addr[1'h1/* 1*/:1'h0/* 0*/];
-  assign T23 = T39 || T24;
-  assign T24 = T26 && T25;
-  assign T25 = ext_mem_burst_cnt >= 2'h3/* 3*/;
-  assign T26 = T31 && T27;
-  assign T27 = ext_mem_fcounter < T28;
-  assign T28 = ext_mem_tsize - T29;
-  assign T29 = {9'h0/* 0*/, 1'h1/* 1*/};
-  assign T30 = T20 || T31;
-  assign T31 = T33 && T32;
-  assign T32 = ocpSlaveReg_Resp == 2'b01/* 0*/;
-  assign T33 = T34 && T19;
-  assign T34 = mcache_state == 3'h3/* 3*/;
-  assign T35 = T31 ? T37 : T36;
-  assign T36 = {9'h0/* 0*/, 1'h0/* 0*/};
-  assign T37 = ext_mem_fcounter + T38;
-  assign T38 = {9'h0/* 0*/, 1'h1/* 1*/};
-  assign T39 = T40 || T31;
-  assign T40 = T43 || T41;
-  assign T41 = T20 && T42;
-  assign T42 = ext_mem_burst_cnt >= 2'h3/* 3*/;
-  assign T43 = T10 || T44;
-  assign T44 = T46 && T45;
-  assign T45 = ocpSlaveReg_Resp == 2'b01/* 0*/;
-  assign T46 = mcache_state == 3'h2/* 2*/;
-  assign T47 = T24 ? T57 : T48;
-  assign T48 = T31 ? T55 : T49;
-  assign T49 = T41 ? T54 : T50;
-  assign T50 = T44 ? T52 : T51;
-  assign T51 = {1'h0/* 0*/, 1'h0/* 0*/};
-  assign T52 = ext_mem_burst_cnt + T53;
-  assign T53 = {1'h0/* 0*/, 1'h1/* 1*/};
-  assign T54 = {1'h0/* 0*/, 1'h0/* 0*/};
-  assign T55 = ext_mem_burst_cnt + T56;
-  assign T56 = {1'h0/* 0*/, 1'h1/* 1*/};
-  assign T57 = {1'h0/* 0*/, 1'h0/* 0*/};
-  assign T58 = T59[4'h9/* 9*/:1'h0/* 0*/];
-  assign T59 = ocpSlaveReg_Data[4'hc/* 12*/:2'h2/* 2*/];
-  assign T60 = T61 || T20;
-  assign T61 = T62 || T10;
-  assign T62 = T63 && io_femcache_request;
-  assign T63 = mcache_state == 3'h0/* 0*/;
-  assign T64 = T15 ? 3'h1/* 1*/ : T65;
-  assign T65 = T17 ? 3'h4/* 4*/ : T66;
-  assign T66 = T20 ? 3'h3/* 3*/ : T67;
-  assign T67 = T10 ? 3'h2/* 2*/ : 3'h1/* 1*/;
-  assign T68 = T70 + T69;
-  assign T69 = {31'h0/* 0*/, 1'h1/* 1*/};
-  assign T70 = callRetBaseReg + T71;
-  assign T71 = {22'h0/* 0*/, ext_mem_fcounter};
-  assign io_ocp_port_M_Cmd = ext_mem_cmd;
-  assign ext_mem_cmd = T72;
-  assign T72 = T24 ? 3'b010/* 0*/ : T73;
-  assign T73 = T41 ? 3'b010/* 0*/ : T74;
-  assign T74 = T10 ? 3'b010/* 0*/ : 3'b000/* 0*/;
-  assign io_mcache_ctrlrepl_instr_stall = T75;
-  assign T75 = mcache_state != 3'h1/* 1*/;
-  assign io_mcache_ctrlrepl_address = T76;
-  assign T76 = mcachemem_address[4'h9/* 9*/:1'h0/* 0*/];
-  assign mcachemem_address = T77;
-  assign T77 = T15 ? io_femcache_address : T78;
-  assign T78 = T79 ? io_femcache_address : addrReg;
-  assign T79 = T13 && T12;
-  assign io_mcache_ctrlrepl_w_tag = mcachemem_w_tag;
-  assign mcachemem_w_tag = T20;
-  assign io_mcache_ctrlrepl_w_addr = mcachemem_w_addr;
-  assign mcachemem_w_addr = T80;
-  assign T80 = T33 ? T83 : T81;
-  assign T81 = T20 ? callRetBaseReg : T82;
-  assign T82 = {31'h0/* 0*/, 1'h0/* 0*/};
-  assign T83 = {22'h0/* 0*/, ext_mem_fcounter};
-  assign io_mcache_ctrlrepl_w_data = mcachemem_w_data;
-  assign mcachemem_w_data = T84;
-  assign T84 = T31 ? ocpSlaveReg_Data : T85;
-  assign T85 = {21'h0/* 0*/, T86};
-  assign T86 = T20 ? T88 : T87;
-  assign T87 = {10'h0/* 0*/, 1'h0/* 0*/};
-  assign T88 = T59 + T89;
-  assign T89 = {10'h0/* 0*/, T90};
-  assign T90 = T59[1'h0/* 0*/:1'h0/* 0*/];
-  assign io_mcache_ctrlrepl_w_enable = mcachemem_w_enable;
-  assign mcachemem_w_enable = T31;
-  assign io_fetch_ena = T91;
-  assign T91 = ! wenaReg;
-  assign T92 = T10 || T17;
-  assign T93 = T17 ? 1'h0/* 0*/ : 1'h1/* 1*/;
+  assign T2 = {ocpAddr, 2'b00/* 0*/};
+  assign ocpAddr = T3;
+  assign T3 = T25 ? T78 : T4;
+  assign T4 = T42 ? callRetBaseReg : T5;
+  assign T5 = T65 ? T76 : T6;
+  assign T6 = T11 ? T8 : T7;
+  assign T7 = {31'h0/* 0*/, 1'h0/* 0*/};
+  assign T8 = {T9, 2'b00/* 0*/};
+  assign T9 = msizeAddr[5'h1f/* 31*/:2'h2/* 2*/];
+  assign msizeAddr = callRetBaseReg - T10;
+  assign T10 = {31'h0/* 0*/, 1'h1/* 1*/};
+  assign T11 = T14 && T12;
+  assign T12 = ! T13;
+  assign T13 = io_mcache_replctrl_hit == 1'h1/* 1*/;
+  assign T14 = mcacheState == 3'h0/* 0*/;
+  assign T15 = T17 || T16;
+  assign T16 = mcacheState == 3'h4/* 4*/;
+  assign T17 = T61 || T18;
+  assign T18 = T35 && T19;
+  assign T19 = ! T20;
+  assign T20 = fetchCntReg < transferSizeReg;
+  assign T21 = T45 && T22;
+  assign T22 = burstCntReg == T23;
+  assign T23 = msizeAddr[1'h1/* 1*/:1'h0/* 0*/];
+  assign T24 = T40 || T25;
+  assign T25 = T27 && T26;
+  assign T26 = burstCntReg >= 2'h3/* 3*/;
+  assign T27 = T32 && T28;
+  assign T28 = fetchCntReg < T29;
+  assign T29 = transferSizeReg - T30;
+  assign T30 = {9'h0/* 0*/, 1'h1/* 1*/};
+  assign T31 = T21 || T32;
+  assign T32 = T34 && T33;
+  assign T33 = ocpSlaveReg_Resp == 2'b01/* 0*/;
+  assign T34 = T35 && T20;
+  assign T35 = mcacheState == 3'h3/* 3*/;
+  assign T36 = T32 ? T38 : T37;
+  assign T37 = {9'h0/* 0*/, 1'h0/* 0*/};
+  assign T38 = fetchCntReg + T39;
+  assign T39 = {9'h0/* 0*/, 1'h1/* 1*/};
+  assign T40 = T41 || T32;
+  assign T41 = T44 || T42;
+  assign T42 = T21 && T43;
+  assign T43 = burstCntReg >= 2'h3/* 3*/;
+  assign T44 = T11 || T45;
+  assign T45 = T47 && T46;
+  assign T46 = ocpSlaveReg_Resp == 2'b01/* 0*/;
+  assign T47 = mcacheState == 3'h1/* 1*/;
+  assign T48 = T25 ? T58 : T49;
+  assign T49 = T32 ? T56 : T50;
+  assign T50 = T42 ? T55 : T51;
+  assign T51 = T45 ? T53 : T52;
+  assign T52 = {1'h0/* 0*/, 1'h0/* 0*/};
+  assign T53 = burstCntReg + T54;
+  assign T54 = {1'h0/* 0*/, 1'h1/* 1*/};
+  assign T55 = {1'h0/* 0*/, 1'h0/* 0*/};
+  assign T56 = burstCntReg + T57;
+  assign T57 = {1'h0/* 0*/, 1'h1/* 1*/};
+  assign T58 = {1'h0/* 0*/, 1'h0/* 0*/};
+  assign T59 = T60[4'h9/* 9*/:1'h0/* 0*/];
+  assign T60 = ocpSlaveReg_Data[4'hc/* 12*/:2'h2/* 2*/];
+  assign T61 = T62 || T21;
+  assign T62 = T66 || T63;
+  assign T63 = T65 && T64;
+  assign T64 = io_ocp_port_S_CmdAccept == 1'h1/* 1*/;
+  assign T65 = mcacheState == 3'h2/* 2*/;
+  assign T66 = T70 || T67;
+  assign T67 = T11 && T68;
+  assign T68 = ! T69;
+  assign T69 = io_ocp_port_S_CmdAccept == 1'h1/* 1*/;
+  assign T70 = T11 && T69;
+  assign T71 = T16 ? 3'h0/* 0*/ : T72;
+  assign T72 = T18 ? 3'h4/* 4*/ : T73;
+  assign T73 = T21 ? 3'h3/* 3*/ : T74;
+  assign T74 = T63 ? 3'h1/* 1*/ : T75;
+  assign T75 = T67 ? 3'h2/* 2*/ : 3'h1/* 1*/;
+  assign T76 = {T77, 2'b00/* 0*/};
+  assign T77 = msizeAddr[5'h1f/* 31*/:2'h2/* 2*/];
+  assign T78 = T80 + T79;
+  assign T79 = {31'h0/* 0*/, 1'h1/* 1*/};
+  assign T80 = callRetBaseReg + T81;
+  assign T81 = {22'h0/* 0*/, fetchCntReg};
+  assign io_ocp_port_M_Cmd = ocpCmd;
+  assign ocpCmd = T82;
+  assign T82 = T25 ? 3'b010/* 0*/ : T83;
+  assign T83 = T42 ? 3'b010/* 0*/ : T84;
+  assign T84 = T65 ? 3'b010/* 0*/ : T85;
+  assign T85 = T11 ? 3'b010/* 0*/ : 3'b000/* 0*/;
+  assign io_mcache_ctrlrepl_instrStall = T86;
+  assign T86 = mcacheState != 3'h0/* 0*/;
+  assign io_mcache_ctrlrepl_addrOdd = T87;
+  assign T87 = addrOdd[4'h9/* 9*/:1'h0/* 0*/];
+  assign addrOdd = T88;
+  assign T88 = T16 ? io_femcache_addrOdd : T89;
+  assign T89 = T90 ? io_femcache_addrOdd : addrOddReg;
+  assign T90 = T14 && T13;
+  assign io_mcache_ctrlrepl_addrEven = T91;
+  assign T91 = addrEven[4'h9/* 9*/:1'h0/* 0*/];
+  assign addrEven = T92;
+  assign T92 = T16 ? io_femcache_addrEven : T93;
+  assign T93 = T90 ? io_femcache_addrEven : addrEvenReg;
+  assign io_mcache_ctrlrepl_wTag = wTag;
+  assign wTag = T21;
+  assign io_mcache_ctrlrepl_wAddr = wAddr;
+  assign wAddr = T94;
+  assign T94 = T34 ? T97 : T95;
+  assign T95 = T21 ? callRetBaseReg : T96;
+  assign T96 = {31'h0/* 0*/, 1'h0/* 0*/};
+  assign T97 = {22'h0/* 0*/, fetchCntReg};
+  assign io_mcache_ctrlrepl_wData = wData;
+  assign wData = T98;
+  assign T98 = T32 ? ocpSlaveReg_Data : T99;
+  assign T99 = {21'h0/* 0*/, T100};
+  assign T100 = T21 ? T102 : T101;
+  assign T101 = {10'h0/* 0*/, 1'h0/* 0*/};
+  assign T102 = T60 + T103;
+  assign T103 = {10'h0/* 0*/, T104};
+  assign T104 = T60[1'h0/* 0*/:1'h0/* 0*/];
+  assign io_mcache_ctrlrepl_wEna = wEna;
+  assign wEna = T32;
+  assign io_fetch_ena = fetchEna;
+  assign fetchEna = T105;
+  assign T105 = T35 ? 1'h0/* 0*/ : T106;
+  assign T106 = T47 ? 1'h0/* 0*/ : T107;
+  assign T107 = T65 ? 1'h0/* 0*/ : 1'h1/* 1*/;
 
   always @(posedge clk) begin
     if(reset) begin
@@ -261,83 +292,83 @@ module MCacheCtrl(input clk, input reset,
       callRetBaseReg <= io_exmcache_callRetBase;
     end
     if(reset) begin
-      mcache_state <= 3'h0/* 0*/;
-    end else if(T14) begin
-      mcache_state <= T64;
+      mcacheState <= 3'h0/* 0*/;
+    end else if(T15) begin
+      mcacheState <= T71;
     end
     if(reset) begin
-      ext_mem_tsize <= 10'h0/* 0*/;
-    end else if(T20) begin
-      ext_mem_tsize <= T58;
+      transferSizeReg <= 10'h0/* 0*/;
+    end else if(T21) begin
+      transferSizeReg <= T59;
     end
     if(reset) begin
-      ext_mem_burst_cnt <= 2'h0/* 0*/;
-    end else if(T23) begin
-      ext_mem_burst_cnt <= T47;
+      burstCntReg <= 2'h0/* 0*/;
+    end else if(T24) begin
+      burstCntReg <= T48;
     end
     if(reset) begin
-      ext_mem_fcounter <= 10'h0/* 0*/;
-    end else if(T30) begin
-      ext_mem_fcounter <= T35;
+      fetchCntReg <= 10'h0/* 0*/;
+    end else if(T31) begin
+      fetchCntReg <= T36;
     end
     ocpSlaveReg_Resp <= io_ocp_port_S_Resp;
     ocpSlaveReg_Data <= io_ocp_port_S_Data;
     if(reset) begin
-      addrReg <= 1'h0/* 0*/;
+      addrOddReg <= 1'h0/* 0*/;
     end else if(io_exmcache_doCallRet) begin
-      addrReg <= io_femcache_address;
+      addrOddReg <= io_femcache_addrOdd;
     end
     if(reset) begin
-      wenaReg <= 1'h0/* 0*/;
-    end else if(T92) begin
-      wenaReg <= T93;
+      addrEvenReg <= 1'h0/* 0*/;
+    end else if(io_exmcache_doCallRet) begin
+      addrEvenReg <= io_femcache_addrEven;
     end
   end
 endmodule
 
 module MCacheReplFifo(input clk, input reset,
     input  io_ena_in,
-    output io_hit_ena,
+    output io_hitEna,
     input  io_exmcache_doCallRet,
     input [31:0] io_exmcache_callRetBase,
     input [31:0] io_exmcache_callRetAddr,
-    output[31:0] io_mcachefe_instr_a,
-    output[31:0] io_mcachefe_instr_b,
+    output[31:0] io_mcachefe_instrEven,
+    output[31:0] io_mcachefe_instrOdd,
     output[10:0] io_mcachefe_relBase,
     output[11:0] io_mcachefe_relPc,
     output[31:0] io_mcachefe_reloc,
-    output[1:0] io_mcachefe_mem_sel,
-    input  io_mcache_ctrlrepl_w_enable,
-    input [31:0] io_mcache_ctrlrepl_w_data,
-    input [31:0] io_mcache_ctrlrepl_w_addr,
-    input  io_mcache_ctrlrepl_w_tag,
-    input [9:0] io_mcache_ctrlrepl_address,
-    input  io_mcache_ctrlrepl_instr_stall,
+    output[1:0] io_mcachefe_memSel,
+    input  io_mcache_ctrlrepl_wEna,
+    input [31:0] io_mcache_ctrlrepl_wData,
+    input [31:0] io_mcache_ctrlrepl_wAddr,
+    input  io_mcache_ctrlrepl_wTag,
+    input [9:0] io_mcache_ctrlrepl_addrEven,
+    input [9:0] io_mcache_ctrlrepl_addrOdd,
+    input  io_mcache_ctrlrepl_instrStall,
     output io_mcache_replctrl_hit,
-    output[10:0] io_mcache_replctrl_pos_offset,
-    output io_mcachemem_in_w_even,
-    output io_mcachemem_in_w_odd,
-    output[31:0] io_mcachemem_in_w_data,
-    output[8:0] io_mcachemem_in_w_addr,
-    output[8:0] io_mcachemem_in_addr_even,
-    output[8:0] io_mcachemem_in_addr_odd,
-    input [31:0] io_mcachemem_out_instr_even,
-    input [31:0] io_mcachemem_out_instr_odd
+    output io_mcachemem_in_wEven,
+    output io_mcachemem_in_wOdd,
+    output[31:0] io_mcachemem_in_wData,
+    output[8:0] io_mcachemem_in_wAddr,
+    output[8:0] io_mcachemem_in_addrEven,
+    output[8:0] io_mcachemem_in_addrOdd,
+    input [31:0] instrEven,
+    input [31:0] instrOdd
 );
 
-  wire[8:0] mcachemem_in_address;
-  wire[8:0] T0;
-  wire[8:0] T1;
-  wire[8:0] T2;
-  wire rd_parity;
-  wire[8:0] mcachemem_w_address;
-  wire[31:0] T3;
-  wire[31:0] T4;
+  wire[8:0] addrOdd;
+  wire[8:0] addrEven;
+  wire[8:0] wAddr;
+  wire[31:0] T0;
+  wire[31:0] T1;
   reg[9:0] wrPosReg;
   reg[9:0] posReg;
+  wire T2;
+  wire T3;
+  wire hit;
+  wire T4;
   wire T5;
   wire T6;
-  wire hit;
   wire T7;
   wire T8;
   wire T9;
@@ -352,580 +383,580 @@ module MCacheReplFifo(input clk, input reset,
   wire T18;
   wire T19;
   wire T20;
+  reg[0:0] mcacheValidVec_0;
   wire T21;
   wire T22;
   wire T23;
-  reg[0:0] mcache_valid_vec_0;
-  wire T24;
-  wire T25;
-  wire T26;
-  wire[15:0] T27;
-  wire[30:0] T28;
-  wire[3:0] T29;
-  reg[3:0] next_replace_tag;
+  wire[15:0] T24;
+  wire[30:0] T25;
+  wire[3:0] T26;
+  reg[3:0] nextTagReg;
+  wire T27;
+  wire signed  T28;
+  wire[11:0] T29;
+  reg signed [11:0] freeSpaceReg;
   wire T30;
-  wire signed  T31;
-  wire[11:0] T32;
-  reg signed [11:0] free_space;
-  wire T33;
+  wire[11:0] T31;
+  wire signed [11:0] T32;
+  wire signed [11:0] T33;
   wire[11:0] T34;
-  wire signed [11:0] T35;
-  wire signed [11:0] T36;
-  wire[11:0] T37;
+  wire[10:0] T35;
+  wire[10:0] T36;
+  wire[10:0] T37;
   wire[10:0] T38;
-  wire[10:0] T39;
-  wire[10:0] T40;
-  wire[10:0] T41;
-  reg[10:0] mcache_size_vec_0;
-  wire T42;
-  wire T43;
-  wire T44;
-  wire[15:0] T45;
-  wire[30:0] T46;
-  wire[3:0] T47;
-  wire T48;
-  wire T49;
-  wire[15:0] T50;
-  wire[30:0] T51;
+  reg[10:0] mcacheSizeVec_0;
+  wire T39;
+  wire T40;
+  wire T41;
+  wire[15:0] T42;
+  wire[30:0] T43;
+  wire[3:0] T44;
+  wire T45;
+  wire T46;
+  wire[15:0] T47;
+  wire[30:0] T48;
+  wire[3:0] T49;
+  reg[3:0] nextIndexReg;
+  wire[3:0] T50;
+  wire[3:0] T51;
   wire[3:0] T52;
-  reg[3:0] next_index_tag;
   wire[3:0] T53;
-  wire[3:0] T54;
-  wire[3:0] T55;
-  wire[3:0] T56;
-  wire T57;
-  wire[10:0] T58;
-  wire[10:0] T59;
-  wire[10:0] T60;
-  reg[10:0] mcache_size_vec_1;
+  wire T54;
+  wire[10:0] T55;
+  wire[10:0] T56;
+  wire[10:0] T57;
+  reg[10:0] mcacheSizeVec_1;
+  wire T58;
+  wire T59;
+  wire T60;
   wire T61;
   wire T62;
-  wire T63;
-  wire T64;
+  wire[10:0] T63;
+  wire[10:0] T64;
   wire T65;
   wire[10:0] T66;
-  wire[10:0] T67;
+  reg[10:0] mcacheSizeVec_2;
+  wire T67;
   wire T68;
-  wire[10:0] T69;
-  reg[10:0] mcache_size_vec_2;
+  wire T69;
   wire T70;
   wire T71;
-  wire T72;
-  wire T73;
+  wire[10:0] T72;
+  wire[10:0] T73;
+  reg[10:0] mcacheSizeVec_3;
   wire T74;
-  wire[10:0] T75;
-  wire[10:0] T76;
-  reg[10:0] mcache_size_vec_3;
+  wire T75;
+  wire T76;
   wire T77;
   wire T78;
-  wire T79;
-  wire T80;
+  wire[10:0] T79;
+  wire[10:0] T80;
   wire T81;
-  wire[10:0] T82;
+  wire T82;
   wire[10:0] T83;
-  wire T84;
+  wire[10:0] T84;
+  reg[10:0] mcacheSizeVec_4;
   wire T85;
-  wire[10:0] T86;
-  wire[10:0] T87;
-  reg[10:0] mcache_size_vec_4;
+  wire T86;
+  wire T87;
   wire T88;
   wire T89;
-  wire T90;
-  wire T91;
+  wire[10:0] T90;
+  wire[10:0] T91;
+  reg[10:0] mcacheSizeVec_5;
   wire T92;
-  wire[10:0] T93;
-  wire[10:0] T94;
-  reg[10:0] mcache_size_vec_5;
+  wire T93;
+  wire T94;
   wire T95;
   wire T96;
-  wire T97;
-  wire T98;
+  wire[10:0] T97;
+  wire[10:0] T98;
   wire T99;
   wire[10:0] T100;
-  wire[10:0] T101;
+  reg[10:0] mcacheSizeVec_6;
+  wire T101;
   wire T102;
-  wire[10:0] T103;
-  reg[10:0] mcache_size_vec_6;
+  wire T103;
   wire T104;
   wire T105;
-  wire T106;
-  wire T107;
+  wire[10:0] T106;
+  wire[10:0] T107;
+  reg[10:0] mcacheSizeVec_7;
   wire T108;
-  wire[10:0] T109;
-  wire[10:0] T110;
-  reg[10:0] mcache_size_vec_7;
+  wire T109;
+  wire T110;
   wire T111;
   wire T112;
-  wire T113;
-  wire T114;
+  wire[10:0] T113;
+  wire[10:0] T114;
   wire T115;
-  wire[10:0] T116;
-  wire[10:0] T117;
-  wire T118;
-  wire T119;
-  wire T120;
-  wire[10:0] T121;
-  wire[10:0] T122;
-  wire[10:0] T123;
-  reg[10:0] mcache_size_vec_8;
+  wire T116;
+  wire T117;
+  wire[10:0] T118;
+  wire[10:0] T119;
+  wire[10:0] T120;
+  reg[10:0] mcacheSizeVec_8;
+  wire T121;
+  wire T122;
+  wire T123;
   wire T124;
   wire T125;
-  wire T126;
-  wire T127;
+  wire[10:0] T126;
+  wire[10:0] T127;
+  reg[10:0] mcacheSizeVec_9;
   wire T128;
-  wire[10:0] T129;
-  wire[10:0] T130;
-  reg[10:0] mcache_size_vec_9;
+  wire T129;
+  wire T130;
   wire T131;
   wire T132;
-  wire T133;
-  wire T134;
+  wire[10:0] T133;
+  wire[10:0] T134;
   wire T135;
   wire[10:0] T136;
-  wire[10:0] T137;
+  reg[10:0] mcacheSizeVec_10;
+  wire T137;
   wire T138;
-  wire[10:0] T139;
-  reg[10:0] mcache_size_vec_10;
+  wire T139;
   wire T140;
   wire T141;
-  wire T142;
-  wire T143;
+  wire[10:0] T142;
+  wire[10:0] T143;
+  reg[10:0] mcacheSizeVec_11;
   wire T144;
-  wire[10:0] T145;
-  wire[10:0] T146;
-  reg[10:0] mcache_size_vec_11;
+  wire T145;
+  wire T146;
   wire T147;
   wire T148;
-  wire T149;
-  wire T150;
+  wire[10:0] T149;
+  wire[10:0] T150;
   wire T151;
-  wire[10:0] T152;
+  wire T152;
   wire[10:0] T153;
-  wire T154;
+  wire[10:0] T154;
+  reg[10:0] mcacheSizeVec_12;
   wire T155;
-  wire[10:0] T156;
-  wire[10:0] T157;
-  reg[10:0] mcache_size_vec_12;
+  wire T156;
+  wire T157;
   wire T158;
   wire T159;
-  wire T160;
-  wire T161;
+  wire[10:0] T160;
+  wire[10:0] T161;
+  reg[10:0] mcacheSizeVec_13;
   wire T162;
-  wire[10:0] T163;
-  wire[10:0] T164;
-  reg[10:0] mcache_size_vec_13;
+  wire T163;
+  wire T164;
   wire T165;
   wire T166;
-  wire T167;
-  wire T168;
+  wire[10:0] T167;
+  wire[10:0] T168;
   wire T169;
   wire[10:0] T170;
-  wire[10:0] T171;
+  reg[10:0] mcacheSizeVec_14;
+  wire T171;
   wire T172;
-  wire[10:0] T173;
-  reg[10:0] mcache_size_vec_14;
+  wire T173;
   wire T174;
   wire T175;
-  wire T176;
-  wire T177;
+  wire[10:0] T176;
+  wire[10:0] T177;
+  reg[10:0] mcacheSizeVec_15;
   wire T178;
-  wire[10:0] T179;
-  wire[10:0] T180;
-  reg[10:0] mcache_size_vec_15;
+  wire T179;
+  wire T180;
   wire T181;
   wire T182;
-  wire T183;
-  wire T184;
+  wire[10:0] T183;
+  wire[10:0] T184;
   wire T185;
-  wire[10:0] T186;
-  wire[10:0] T187;
+  wire T186;
+  wire T187;
   wire T188;
-  wire T189;
-  wire T190;
-  wire T191;
-  wire signed [11:0] T192;
+  wire signed [11:0] T189;
+  wire signed [11:0] T190;
+  wire[11:0] T191;
+  wire[10:0] T192;
   wire signed [11:0] T193;
-  wire[11:0] T194;
-  wire[10:0] T195;
-  wire signed [11:0] T196;
-  wire signed [11:0] T197;
-  wire[11:0] T198;
+  wire signed [11:0] T194;
+  wire[11:0] T195;
+  wire[10:0] T196;
+  wire[10:0] T197;
+  wire[10:0] T198;
   wire[10:0] T199;
-  wire[10:0] T200;
+  wire T200;
   wire[10:0] T201;
-  wire[10:0] T202;
+  wire T202;
   wire T203;
   wire[10:0] T204;
-  wire T205;
+  wire[10:0] T205;
   wire T206;
   wire[10:0] T207;
-  wire[10:0] T208;
+  wire T208;
   wire T209;
-  wire[10:0] T210;
-  wire T211;
-  wire T212;
-  wire T213;
-  wire[10:0] T214;
+  wire T210;
+  wire[10:0] T211;
+  wire[10:0] T212;
+  wire[10:0] T213;
+  wire T214;
   wire[10:0] T215;
-  wire[10:0] T216;
+  wire T216;
   wire T217;
   wire[10:0] T218;
-  wire T219;
+  wire[10:0] T219;
   wire T220;
   wire[10:0] T221;
-  wire[10:0] T222;
+  wire T222;
   wire T223;
-  wire[10:0] T224;
+  wire T224;
   wire T225;
   wire T226;
   wire T227;
-  wire T228;
-  wire T229;
-  wire T230;
+  wire[3:0] T228;
+  wire[3:0] T229;
+  wire[3:0] T230;
   wire[3:0] T231;
   wire[3:0] T232;
-  wire[3:0] T233;
-  wire[3:0] T234;
-  wire[3:0] T235;
-  wire T236;
-  wire T237;
-  wire T238;
-  wire[15:0] T239;
-  wire[30:0] T240;
-  wire[3:0] T241;
+  wire T233;
+  wire T234;
+  wire T235;
+  wire[15:0] T236;
+  wire[30:0] T237;
+  wire[3:0] T238;
+  wire T239;
+  wire T240;
+  reg[31:0] mcacheAddrVec_0;
+  wire T241;
   wire T242;
-  wire T243;
-  reg[31:0] mcache_addr_vec_0;
-  wire T244;
-  wire T245;
-  wire[15:0] T246;
-  wire[30:0] T247;
-  wire[3:0] T248;
-  wire T249;
+  wire[15:0] T243;
+  wire[30:0] T244;
+  wire[3:0] T245;
+  wire T246;
+  wire T247;
+  wire[16:0] T248;
+  wire[16:0] T249;
   wire T250;
-  wire[16:0] T251;
-  wire[16:0] T252;
+  wire T251;
+  wire T252;
+  reg[0:0] mcacheValidVec_1;
   wire T253;
   wire T254;
   wire T255;
-  reg[0:0] mcache_valid_vec_1;
   wire T256;
   wire T257;
   wire T258;
   wire T259;
+  reg[31:0] mcacheAddrVec_1;
   wire T260;
   wire T261;
   wire T262;
-  reg[31:0] mcache_addr_vec_1;
   wire T263;
+  reg[0:0] mcacheValidVec_2;
   wire T264;
   wire T265;
   wire T266;
-  reg[0:0] mcache_valid_vec_2;
   wire T267;
   wire T268;
   wire T269;
   wire T270;
+  reg[31:0] mcacheAddrVec_2;
   wire T271;
   wire T272;
   wire T273;
-  reg[31:0] mcache_addr_vec_2;
   wire T274;
+  reg[0:0] mcacheValidVec_3;
   wire T275;
   wire T276;
   wire T277;
-  reg[0:0] mcache_valid_vec_3;
   wire T278;
   wire T279;
   wire T280;
   wire T281;
+  reg[31:0] mcacheAddrVec_3;
   wire T282;
   wire T283;
   wire T284;
-  reg[31:0] mcache_addr_vec_3;
   wire T285;
+  reg[0:0] mcacheValidVec_4;
   wire T286;
   wire T287;
   wire T288;
-  reg[0:0] mcache_valid_vec_4;
   wire T289;
   wire T290;
   wire T291;
   wire T292;
+  reg[31:0] mcacheAddrVec_4;
   wire T293;
   wire T294;
   wire T295;
-  reg[31:0] mcache_addr_vec_4;
   wire T296;
+  reg[0:0] mcacheValidVec_5;
   wire T297;
   wire T298;
   wire T299;
-  reg[0:0] mcache_valid_vec_5;
   wire T300;
   wire T301;
   wire T302;
   wire T303;
+  reg[31:0] mcacheAddrVec_5;
   wire T304;
   wire T305;
   wire T306;
-  reg[31:0] mcache_addr_vec_5;
   wire T307;
+  reg[0:0] mcacheValidVec_6;
   wire T308;
   wire T309;
   wire T310;
-  reg[0:0] mcache_valid_vec_6;
   wire T311;
   wire T312;
   wire T313;
   wire T314;
+  reg[31:0] mcacheAddrVec_6;
   wire T315;
   wire T316;
   wire T317;
-  reg[31:0] mcache_addr_vec_6;
   wire T318;
+  reg[0:0] mcacheValidVec_7;
   wire T319;
   wire T320;
   wire T321;
-  reg[0:0] mcache_valid_vec_7;
   wire T322;
   wire T323;
   wire T324;
   wire T325;
+  reg[31:0] mcacheAddrVec_7;
   wire T326;
   wire T327;
   wire T328;
-  reg[31:0] mcache_addr_vec_7;
   wire T329;
+  reg[0:0] mcacheValidVec_8;
   wire T330;
   wire T331;
   wire T332;
-  reg[0:0] mcache_valid_vec_8;
   wire T333;
   wire T334;
   wire T335;
   wire T336;
+  reg[31:0] mcacheAddrVec_8;
   wire T337;
   wire T338;
   wire T339;
-  reg[31:0] mcache_addr_vec_8;
   wire T340;
+  reg[0:0] mcacheValidVec_9;
   wire T341;
   wire T342;
   wire T343;
-  reg[0:0] mcache_valid_vec_9;
   wire T344;
   wire T345;
   wire T346;
   wire T347;
+  reg[31:0] mcacheAddrVec_9;
   wire T348;
   wire T349;
   wire T350;
-  reg[31:0] mcache_addr_vec_9;
   wire T351;
+  reg[0:0] mcacheValidVec_10;
   wire T352;
   wire T353;
   wire T354;
-  reg[0:0] mcache_valid_vec_10;
   wire T355;
   wire T356;
   wire T357;
   wire T358;
+  reg[31:0] mcacheAddrVec_10;
   wire T359;
   wire T360;
   wire T361;
-  reg[31:0] mcache_addr_vec_10;
   wire T362;
+  reg[0:0] mcacheValidVec_11;
   wire T363;
   wire T364;
   wire T365;
-  reg[0:0] mcache_valid_vec_11;
   wire T366;
   wire T367;
   wire T368;
   wire T369;
+  reg[31:0] mcacheAddrVec_11;
   wire T370;
   wire T371;
   wire T372;
-  reg[31:0] mcache_addr_vec_11;
   wire T373;
+  reg[0:0] mcacheValidVec_12;
   wire T374;
   wire T375;
   wire T376;
-  reg[0:0] mcache_valid_vec_12;
   wire T377;
   wire T378;
   wire T379;
   wire T380;
+  reg[31:0] mcacheAddrVec_12;
   wire T381;
   wire T382;
   wire T383;
-  reg[31:0] mcache_addr_vec_12;
   wire T384;
+  reg[0:0] mcacheValidVec_13;
   wire T385;
   wire T386;
   wire T387;
-  reg[0:0] mcache_valid_vec_13;
   wire T388;
   wire T389;
   wire T390;
   wire T391;
+  reg[31:0] mcacheAddrVec_13;
   wire T392;
   wire T393;
   wire T394;
-  reg[31:0] mcache_addr_vec_13;
   wire T395;
+  reg[0:0] mcacheValidVec_14;
   wire T396;
   wire T397;
   wire T398;
-  reg[0:0] mcache_valid_vec_14;
   wire T399;
   wire T400;
   wire T401;
   wire T402;
+  reg[31:0] mcacheAddrVec_14;
   wire T403;
   wire T404;
   wire T405;
-  reg[31:0] mcache_addr_vec_14;
   wire T406;
+  reg[0:0] mcacheValidVec_15;
   wire T407;
   wire T408;
   wire T409;
-  reg[0:0] mcache_valid_vec_15;
   wire T410;
   wire T411;
   wire T412;
   wire T413;
+  reg[31:0] mcacheAddrVec_15;
   wire T414;
   wire T415;
-  wire T416;
-  reg[31:0] mcache_addr_vec_15;
-  wire T417;
-  wire T418;
+  wire[9:0] T416;
+  reg[9:0] nextPosReg;
+  wire[9:0] T417;
+  wire[9:0] T418;
   wire[9:0] T419;
-  reg[9:0] next_replace_pos;
+  wire[9:0] mergePosVec_15;
   wire[9:0] T420;
   wire[9:0] T421;
-  wire[9:0] T422;
-  wire[9:0] mergePosVec_15;
-  wire[9:0] T423;
-  wire[9:0] T424;
-  reg[9:0] mcache_pos_vec_15;
-  wire T425;
-  wire T426;
-  wire[15:0] T427;
-  wire[30:0] T428;
-  wire[3:0] T429;
-  wire[9:0] T430;
+  reg[9:0] mcachePosVec_15;
+  wire T422;
+  wire T423;
+  wire[15:0] T424;
+  wire[30:0] T425;
+  wire[3:0] T426;
+  wire[9:0] T427;
   wire[9:0] mergePosVec_14;
-  wire[9:0] T431;
+  wire[9:0] T428;
+  wire[9:0] T429;
+  reg[9:0] mcachePosVec_14;
+  wire T430;
+  wire T431;
   wire[9:0] T432;
-  reg[9:0] mcache_pos_vec_14;
-  wire T433;
-  wire T434;
-  wire[9:0] T435;
   wire[9:0] mergePosVec_13;
-  wire[9:0] T436;
+  wire[9:0] T433;
+  wire[9:0] T434;
+  reg[9:0] mcachePosVec_13;
+  wire T435;
+  wire T436;
   wire[9:0] T437;
-  reg[9:0] mcache_pos_vec_13;
-  wire T438;
-  wire T439;
-  wire[9:0] T440;
   wire[9:0] mergePosVec_12;
-  wire[9:0] T441;
+  wire[9:0] T438;
+  wire[9:0] T439;
+  reg[9:0] mcachePosVec_12;
+  wire T440;
+  wire T441;
   wire[9:0] T442;
-  reg[9:0] mcache_pos_vec_12;
-  wire T443;
-  wire T444;
-  wire[9:0] T445;
   wire[9:0] mergePosVec_11;
-  wire[9:0] T446;
+  wire[9:0] T443;
+  wire[9:0] T444;
+  reg[9:0] mcachePosVec_11;
+  wire T445;
+  wire T446;
   wire[9:0] T447;
-  reg[9:0] mcache_pos_vec_11;
-  wire T448;
-  wire T449;
-  wire[9:0] T450;
   wire[9:0] mergePosVec_10;
-  wire[9:0] T451;
+  wire[9:0] T448;
+  wire[9:0] T449;
+  reg[9:0] mcachePosVec_10;
+  wire T450;
+  wire T451;
   wire[9:0] T452;
-  reg[9:0] mcache_pos_vec_10;
-  wire T453;
-  wire T454;
-  wire[9:0] T455;
   wire[9:0] mergePosVec_9;
-  wire[9:0] T456;
+  wire[9:0] T453;
+  wire[9:0] T454;
+  reg[9:0] mcachePosVec_9;
+  wire T455;
+  wire T456;
   wire[9:0] T457;
-  reg[9:0] mcache_pos_vec_9;
-  wire T458;
-  wire T459;
-  wire[9:0] T460;
   wire[9:0] mergePosVec_8;
-  wire[9:0] T461;
+  wire[9:0] T458;
+  wire[9:0] T459;
+  reg[9:0] mcachePosVec_8;
+  wire T460;
+  wire T461;
   wire[9:0] T462;
-  reg[9:0] mcache_pos_vec_8;
-  wire T463;
-  wire T464;
-  wire[9:0] T465;
   wire[9:0] mergePosVec_7;
-  wire[9:0] T466;
+  wire[9:0] T463;
+  wire[9:0] T464;
+  reg[9:0] mcachePosVec_7;
+  wire T465;
+  wire T466;
   wire[9:0] T467;
-  reg[9:0] mcache_pos_vec_7;
-  wire T468;
-  wire T469;
-  wire[9:0] T470;
   wire[9:0] mergePosVec_6;
-  wire[9:0] T471;
+  wire[9:0] T468;
+  wire[9:0] T469;
+  reg[9:0] mcachePosVec_6;
+  wire T470;
+  wire T471;
   wire[9:0] T472;
-  reg[9:0] mcache_pos_vec_6;
-  wire T473;
-  wire T474;
-  wire[9:0] T475;
   wire[9:0] mergePosVec_5;
-  wire[9:0] T476;
+  wire[9:0] T473;
+  wire[9:0] T474;
+  reg[9:0] mcachePosVec_5;
+  wire T475;
+  wire T476;
   wire[9:0] T477;
-  reg[9:0] mcache_pos_vec_5;
-  wire T478;
-  wire T479;
-  wire[9:0] T480;
   wire[9:0] mergePosVec_4;
-  wire[9:0] T481;
+  wire[9:0] T478;
+  wire[9:0] T479;
+  reg[9:0] mcachePosVec_4;
+  wire T480;
+  wire T481;
   wire[9:0] T482;
-  reg[9:0] mcache_pos_vec_4;
-  wire T483;
-  wire T484;
-  wire[9:0] T485;
   wire[9:0] mergePosVec_3;
-  wire[9:0] T486;
+  wire[9:0] T483;
+  wire[9:0] T484;
+  reg[9:0] mcachePosVec_3;
+  wire T485;
+  wire T486;
   wire[9:0] T487;
-  reg[9:0] mcache_pos_vec_3;
-  wire T488;
-  wire T489;
-  wire[9:0] T490;
   wire[9:0] mergePosVec_2;
-  wire[9:0] T491;
+  wire[9:0] T488;
+  wire[9:0] T489;
+  reg[9:0] mcachePosVec_2;
+  wire T490;
+  wire T491;
   wire[9:0] T492;
-  reg[9:0] mcache_pos_vec_2;
-  wire T493;
-  wire T494;
-  wire[9:0] T495;
   wire[9:0] mergePosVec_1;
-  wire[9:0] T496;
+  wire[9:0] T493;
+  wire[9:0] T494;
+  reg[9:0] mcachePosVec_1;
+  wire T495;
+  wire T496;
   wire[9:0] T497;
-  reg[9:0] mcache_pos_vec_1;
-  wire T498;
-  wire T499;
-  wire[9:0] T500;
   wire[9:0] mergePosVec_0;
-  wire[9:0] T501;
+  wire[9:0] T498;
+  wire[9:0] T499;
+  reg[9:0] mcachePosVec_0;
+  wire T500;
+  wire T501;
   wire[9:0] T502;
-  reg[9:0] mcache_pos_vec_0;
   wire T503;
+  wire wParity;
   wire T504;
-  wire[9:0] T505;
-  wire T506;
-  wire wr_parity;
-  wire T507;
-  wire[10:0] T508;
   reg[0:0] hitReg;
+  wire T505;
+  wire T506;
+  wire T507;
+  wire T508;
   wire T509;
   wire T510;
   wire T511;
@@ -955,1096 +986,1099 @@ module MCacheReplFifo(input clk, input reset,
   wire T535;
   wire T536;
   wire T537;
-  wire T538;
-  wire T539;
-  wire T540;
-  wire T541;
-  wire[1:0] T542;
+  wire[1:0] T538;
   reg[0:0] selMCacheReg;
-  wire T543;
-  wire[16:0] T544;
-  wire[16:0] T545;
+  wire T539;
+  wire[16:0] T540;
+  wire[16:0] T541;
   reg[0:0] selIspmReg;
-  wire T546;
-  wire[17:0] T547;
-  wire[17:0] T548;
+  wire T542;
+  wire[17:0] T543;
+  wire[17:0] T544;
   wire[31:0] reloc;
+  wire[31:0] T545;
+  wire[14:0] T546;
+  wire[14:0] T547;
+  wire[31:0] T548;
   wire[31:0] T549;
-  wire[14:0] T550;
-  wire[14:0] T551;
-  wire[31:0] T552;
-  wire[31:0] T553;
-  wire[9:0] T554;
+  wire[9:0] T550;
   reg[31:0] callRetBaseReg;
-  wire[11:0] T555;
+  wire[11:0] T551;
   wire[31:0] relPc;
-  wire[31:0] T556;
+  wire[31:0] T552;
   wire[13:0] relBase;
-  wire[13:0] T557;
-  wire[13:0] T558;
-  wire[9:0] T559;
+  wire[13:0] T553;
+  wire[13:0] T554;
+  wire[9:0] T555;
   reg[31:0] callAddrReg;
-  wire[10:0] T560;
-  wire[31:0] T561;
-  wire[31:0] instr_b;
-  reg[0:0] addr_parity_reg;
-  reg[31:0] instr_bReg;
-  wire T562;
-  wire[31:0] T563;
-  wire[31:0] instr_a;
-  reg[31:0] instr_aReg;
+  wire[10:0] T556;
+  wire[31:0] T557;
+  reg[31:0] instrOddReg;
+  wire T558;
+  wire[31:0] T559;
+  reg[31:0] instrEvenReg;
 
-  assign io_mcachemem_in_addr_odd = mcachemem_in_address;
-  assign mcachemem_in_address = io_mcache_ctrlrepl_address[4'h9/* 9*/:1'h1/* 1*/];
-  assign io_mcachemem_in_addr_even = T0;
-  assign T0 = rd_parity ? T1 : mcachemem_in_address;
-  assign T1 = mcachemem_in_address + T2;
-  assign T2 = {8'h0/* 0*/, 1'h1/* 1*/};
-  assign rd_parity = io_mcache_ctrlrepl_address[1'h0/* 0*/:1'h0/* 0*/];
-  assign io_mcachemem_in_w_addr = mcachemem_w_address;
-  assign mcachemem_w_address = T3[4'h9/* 9*/:1'h1/* 1*/];
-  assign T3 = T4 + io_mcache_ctrlrepl_w_addr;
-  assign T4 = {22'h0/* 0*/, wrPosReg};
-  assign T5 = T249 || T6;
-  assign T6 = T249 && hit;
-  assign hit = T7;
-  assign T7 = T408 ? 1'h1/* 1*/ : T8;
-  assign T8 = T397 ? 1'h1/* 1*/ : T9;
-  assign T9 = T386 ? 1'h1/* 1*/ : T10;
-  assign T10 = T375 ? 1'h1/* 1*/ : T11;
-  assign T11 = T364 ? 1'h1/* 1*/ : T12;
-  assign T12 = T353 ? 1'h1/* 1*/ : T13;
-  assign T13 = T342 ? 1'h1/* 1*/ : T14;
-  assign T14 = T331 ? 1'h1/* 1*/ : T15;
-  assign T15 = T320 ? 1'h1/* 1*/ : T16;
-  assign T16 = T309 ? 1'h1/* 1*/ : T17;
-  assign T17 = T298 ? 1'h1/* 1*/ : T18;
-  assign T18 = T287 ? 1'h1/* 1*/ : T19;
-  assign T19 = T276 ? 1'h1/* 1*/ : T20;
-  assign T20 = T265 ? 1'h1/* 1*/ : T21;
-  assign T21 = T254 ? 1'h1/* 1*/ : T22;
-  assign T22 = T249 && T23;
-  assign T23 = T243 && mcache_valid_vec_0;
-  assign T24 = T237 || T25;
-  assign T25 = T31 && T26;
-  assign T26 = T27[1'h0/* 0*/:1'h0/* 0*/];
-  assign T27 = T28[4'hf/* 15*/:1'h0/* 0*/];
-  assign T28 = 16'h1/* 1*/ << T29;
-  assign T29 = next_replace_tag;
-  assign T30 = T229 || T31;
-  assign T31 = $signed(free_space) < $signed(T32);
-  assign T32 = {11'h0/* 0*/, 1'h0/* 0*/};
-  assign T33 = io_mcache_ctrlrepl_w_tag || T31;
-  assign T34 = T31 ? T196 : T35;
-  assign T35 = $signed(T192) + $signed(T36);
-  assign T36 = T37;
-  assign T37 = {1'h0/* 0*/, T38};
-  assign T38 = T191 ? T121 : T39;
-  assign T39 = T120 ? T86 : T40;
-  assign T40 = T85 ? T69 : T41;
-  assign T41 = T68 ? mcache_size_vec_1 : mcache_size_vec_0;
-  assign T42 = T48 || T43;
-  assign T43 = T31 && T44;
-  assign T44 = T45[1'h0/* 0*/:1'h0/* 0*/];
-  assign T45 = T46[4'hf/* 15*/:1'h0/* 0*/];
-  assign T46 = 16'h1/* 1*/ << T47;
-  assign T47 = next_replace_tag;
-  assign T48 = io_mcache_ctrlrepl_w_tag && T49;
-  assign T49 = T50[1'h0/* 0*/:1'h0/* 0*/];
-  assign T50 = T51[4'hf/* 15*/:1'h0/* 0*/];
-  assign T51 = 16'h1/* 1*/ << T52;
-  assign T52 = next_index_tag;
-  assign T53 = T57 ? T56 : T54;
-  assign T54 = next_index_tag + T55;
-  assign T55 = {3'h0/* 0*/, 1'h1/* 1*/};
-  assign T56 = {3'h0/* 0*/, 1'h0/* 0*/};
-  assign T57 = next_index_tag == 4'hf/* 15*/;
-  assign T58 = T43 ? T60 : T59;
-  assign T59 = io_mcache_ctrlrepl_w_data[4'ha/* 10*/:1'h0/* 0*/];
-  assign T60 = {10'h0/* 0*/, 1'h0/* 0*/};
-  assign T61 = T64 || T62;
-  assign T62 = T31 && T63;
-  assign T63 = T45[1'h1/* 1*/:1'h1/* 1*/];
-  assign T64 = io_mcache_ctrlrepl_w_tag && T65;
-  assign T65 = T50[1'h1/* 1*/:1'h1/* 1*/];
-  assign T66 = T62 ? T67 : T59;
-  assign T67 = {10'h0/* 0*/, 1'h0/* 0*/};
-  assign T68 = T52[1'h0/* 0*/:1'h0/* 0*/];
-  assign T69 = T84 ? mcache_size_vec_3 : mcache_size_vec_2;
-  assign T70 = T73 || T71;
-  assign T71 = T31 && T72;
-  assign T72 = T45[2'h2/* 2*/:2'h2/* 2*/];
-  assign T73 = io_mcache_ctrlrepl_w_tag && T74;
-  assign T74 = T50[2'h2/* 2*/:2'h2/* 2*/];
-  assign T75 = T71 ? T76 : T59;
-  assign T76 = {10'h0/* 0*/, 1'h0/* 0*/};
-  assign T77 = T80 || T78;
-  assign T78 = T31 && T79;
-  assign T79 = T45[2'h3/* 3*/:2'h3/* 3*/];
-  assign T80 = io_mcache_ctrlrepl_w_tag && T81;
-  assign T81 = T50[2'h3/* 3*/:2'h3/* 3*/];
-  assign T82 = T78 ? T83 : T59;
-  assign T83 = {10'h0/* 0*/, 1'h0/* 0*/};
-  assign T84 = T52[1'h0/* 0*/:1'h0/* 0*/];
-  assign T85 = T52[1'h1/* 1*/:1'h1/* 1*/];
-  assign T86 = T119 ? T103 : T87;
-  assign T87 = T102 ? mcache_size_vec_5 : mcache_size_vec_4;
-  assign T88 = T91 || T89;
-  assign T89 = T31 && T90;
-  assign T90 = T45[3'h4/* 4*/:3'h4/* 4*/];
-  assign T91 = io_mcache_ctrlrepl_w_tag && T92;
-  assign T92 = T50[3'h4/* 4*/:3'h4/* 4*/];
-  assign T93 = T89 ? T94 : T59;
-  assign T94 = {10'h0/* 0*/, 1'h0/* 0*/};
-  assign T95 = T98 || T96;
-  assign T96 = T31 && T97;
-  assign T97 = T45[3'h5/* 5*/:3'h5/* 5*/];
-  assign T98 = io_mcache_ctrlrepl_w_tag && T99;
-  assign T99 = T50[3'h5/* 5*/:3'h5/* 5*/];
-  assign T100 = T96 ? T101 : T59;
-  assign T101 = {10'h0/* 0*/, 1'h0/* 0*/};
-  assign T102 = T52[1'h0/* 0*/:1'h0/* 0*/];
-  assign T103 = T118 ? mcache_size_vec_7 : mcache_size_vec_6;
-  assign T104 = T107 || T105;
-  assign T105 = T31 && T106;
-  assign T106 = T45[3'h6/* 6*/:3'h6/* 6*/];
-  assign T107 = io_mcache_ctrlrepl_w_tag && T108;
-  assign T108 = T50[3'h6/* 6*/:3'h6/* 6*/];
-  assign T109 = T105 ? T110 : T59;
-  assign T110 = {10'h0/* 0*/, 1'h0/* 0*/};
-  assign T111 = T114 || T112;
-  assign T112 = T31 && T113;
-  assign T113 = T45[3'h7/* 7*/:3'h7/* 7*/];
-  assign T114 = io_mcache_ctrlrepl_w_tag && T115;
-  assign T115 = T50[3'h7/* 7*/:3'h7/* 7*/];
-  assign T116 = T112 ? T117 : T59;
-  assign T117 = {10'h0/* 0*/, 1'h0/* 0*/};
-  assign T118 = T52[1'h0/* 0*/:1'h0/* 0*/];
-  assign T119 = T52[1'h1/* 1*/:1'h1/* 1*/];
-  assign T120 = T52[2'h2/* 2*/:2'h2/* 2*/];
-  assign T121 = T190 ? T156 : T122;
-  assign T122 = T155 ? T139 : T123;
-  assign T123 = T138 ? mcache_size_vec_9 : mcache_size_vec_8;
-  assign T124 = T127 || T125;
-  assign T125 = T31 && T126;
-  assign T126 = T45[4'h8/* 8*/:4'h8/* 8*/];
-  assign T127 = io_mcache_ctrlrepl_w_tag && T128;
-  assign T128 = T50[4'h8/* 8*/:4'h8/* 8*/];
-  assign T129 = T125 ? T130 : T59;
-  assign T130 = {10'h0/* 0*/, 1'h0/* 0*/};
-  assign T131 = T134 || T132;
-  assign T132 = T31 && T133;
-  assign T133 = T45[4'h9/* 9*/:4'h9/* 9*/];
-  assign T134 = io_mcache_ctrlrepl_w_tag && T135;
-  assign T135 = T50[4'h9/* 9*/:4'h9/* 9*/];
-  assign T136 = T132 ? T137 : T59;
-  assign T137 = {10'h0/* 0*/, 1'h0/* 0*/};
-  assign T138 = T52[1'h0/* 0*/:1'h0/* 0*/];
-  assign T139 = T154 ? mcache_size_vec_11 : mcache_size_vec_10;
-  assign T140 = T143 || T141;
-  assign T141 = T31 && T142;
-  assign T142 = T45[4'ha/* 10*/:4'ha/* 10*/];
-  assign T143 = io_mcache_ctrlrepl_w_tag && T144;
-  assign T144 = T50[4'ha/* 10*/:4'ha/* 10*/];
-  assign T145 = T141 ? T146 : T59;
-  assign T146 = {10'h0/* 0*/, 1'h0/* 0*/};
-  assign T147 = T150 || T148;
-  assign T148 = T31 && T149;
-  assign T149 = T45[4'hb/* 11*/:4'hb/* 11*/];
-  assign T150 = io_mcache_ctrlrepl_w_tag && T151;
-  assign T151 = T50[4'hb/* 11*/:4'hb/* 11*/];
-  assign T152 = T148 ? T153 : T59;
-  assign T153 = {10'h0/* 0*/, 1'h0/* 0*/};
-  assign T154 = T52[1'h0/* 0*/:1'h0/* 0*/];
-  assign T155 = T52[1'h1/* 1*/:1'h1/* 1*/];
-  assign T156 = T189 ? T173 : T157;
-  assign T157 = T172 ? mcache_size_vec_13 : mcache_size_vec_12;
-  assign T158 = T161 || T159;
-  assign T159 = T31 && T160;
-  assign T160 = T45[4'hc/* 12*/:4'hc/* 12*/];
-  assign T161 = io_mcache_ctrlrepl_w_tag && T162;
-  assign T162 = T50[4'hc/* 12*/:4'hc/* 12*/];
-  assign T163 = T159 ? T164 : T59;
-  assign T164 = {10'h0/* 0*/, 1'h0/* 0*/};
-  assign T165 = T168 || T166;
-  assign T166 = T31 && T167;
-  assign T167 = T45[4'hd/* 13*/:4'hd/* 13*/];
-  assign T168 = io_mcache_ctrlrepl_w_tag && T169;
-  assign T169 = T50[4'hd/* 13*/:4'hd/* 13*/];
-  assign T170 = T166 ? T171 : T59;
-  assign T171 = {10'h0/* 0*/, 1'h0/* 0*/};
-  assign T172 = T52[1'h0/* 0*/:1'h0/* 0*/];
-  assign T173 = T188 ? mcache_size_vec_15 : mcache_size_vec_14;
-  assign T174 = T177 || T175;
-  assign T175 = T31 && T176;
-  assign T176 = T45[4'he/* 14*/:4'he/* 14*/];
-  assign T177 = io_mcache_ctrlrepl_w_tag && T178;
-  assign T178 = T50[4'he/* 14*/:4'he/* 14*/];
-  assign T179 = T175 ? T180 : T59;
-  assign T180 = {10'h0/* 0*/, 1'h0/* 0*/};
-  assign T181 = T184 || T182;
-  assign T182 = T31 && T183;
-  assign T183 = T45[4'hf/* 15*/:4'hf/* 15*/];
-  assign T184 = io_mcache_ctrlrepl_w_tag && T185;
-  assign T185 = T50[4'hf/* 15*/:4'hf/* 15*/];
-  assign T186 = T182 ? T187 : T59;
-  assign T187 = {10'h0/* 0*/, 1'h0/* 0*/};
-  assign T188 = T52[1'h0/* 0*/:1'h0/* 0*/];
-  assign T189 = T52[1'h1/* 1*/:1'h1/* 1*/];
-  assign T190 = T52[2'h2/* 2*/:2'h2/* 2*/];
-  assign T191 = T52[2'h3/* 3*/:2'h3/* 3*/];
-  assign T192 = $signed(free_space) - $signed(T193);
-  assign T193 = T194;
-  assign T194 = {1'h0/* 0*/, T195};
-  assign T195 = io_mcache_ctrlrepl_w_data[4'ha/* 10*/:1'h0/* 0*/];
-  assign T196 = $signed(free_space) + $signed(T197);
-  assign T197 = T198;
-  assign T198 = {1'h0/* 0*/, T199};
-  assign T199 = T228 ? T214 : T200;
-  assign T200 = T213 ? T207 : T201;
-  assign T201 = T206 ? T204 : T202;
-  assign T202 = T203 ? mcache_size_vec_1 : mcache_size_vec_0;
-  assign T203 = T47[1'h0/* 0*/:1'h0/* 0*/];
-  assign T204 = T205 ? mcache_size_vec_3 : mcache_size_vec_2;
-  assign T205 = T47[1'h0/* 0*/:1'h0/* 0*/];
-  assign T206 = T47[1'h1/* 1*/:1'h1/* 1*/];
-  assign T207 = T212 ? T210 : T208;
-  assign T208 = T209 ? mcache_size_vec_5 : mcache_size_vec_4;
-  assign T209 = T47[1'h0/* 0*/:1'h0/* 0*/];
-  assign T210 = T211 ? mcache_size_vec_7 : mcache_size_vec_6;
-  assign T211 = T47[1'h0/* 0*/:1'h0/* 0*/];
-  assign T212 = T47[1'h1/* 1*/:1'h1/* 1*/];
-  assign T213 = T47[2'h2/* 2*/:2'h2/* 2*/];
-  assign T214 = T227 ? T221 : T215;
-  assign T215 = T220 ? T218 : T216;
-  assign T216 = T217 ? mcache_size_vec_9 : mcache_size_vec_8;
-  assign T217 = T47[1'h0/* 0*/:1'h0/* 0*/];
-  assign T218 = T219 ? mcache_size_vec_11 : mcache_size_vec_10;
-  assign T219 = T47[1'h0/* 0*/:1'h0/* 0*/];
-  assign T220 = T47[1'h1/* 1*/:1'h1/* 1*/];
-  assign T221 = T226 ? T224 : T222;
-  assign T222 = T223 ? mcache_size_vec_13 : mcache_size_vec_12;
-  assign T223 = T47[1'h0/* 0*/:1'h0/* 0*/];
-  assign T224 = T225 ? mcache_size_vec_15 : mcache_size_vec_14;
-  assign T225 = T47[1'h0/* 0*/:1'h0/* 0*/];
-  assign T226 = T47[1'h1/* 1*/:1'h1/* 1*/];
-  assign T227 = T47[2'h2/* 2*/:2'h2/* 2*/];
-  assign T228 = T47[2'h3/* 3*/:2'h3/* 3*/];
-  assign T229 = io_mcache_ctrlrepl_w_tag && T230;
-  assign T230 = next_replace_tag == next_index_tag;
-  assign T231 = T31 ? T232 : T53;
-  assign T232 = T236 ? T235 : T233;
-  assign T233 = next_replace_tag + T234;
-  assign T234 = {3'h0/* 0*/, 1'h1/* 1*/};
-  assign T235 = {3'h0/* 0*/, 1'h0/* 0*/};
-  assign T236 = next_replace_tag == 4'hf/* 15*/;
-  assign T237 = io_mcache_ctrlrepl_w_tag && T238;
-  assign T238 = T239[1'h0/* 0*/:1'h0/* 0*/];
-  assign T239 = T240[4'hf/* 15*/:1'h0/* 0*/];
-  assign T240 = 16'h1/* 1*/ << T241;
-  assign T241 = next_index_tag;
-  assign T242 = T25 ? 1'h0/* 0*/ : 1'h1/* 1*/;
-  assign T243 = io_exmcache_callRetBase == mcache_addr_vec_0;
-  assign T244 = io_mcache_ctrlrepl_w_tag && T245;
-  assign T245 = T246[1'h0/* 0*/:1'h0/* 0*/];
-  assign T246 = T247[4'hf/* 15*/:1'h0/* 0*/];
-  assign T247 = 16'h1/* 1*/ << T248;
-  assign T248 = next_index_tag;
-  assign T249 = T253 && T250;
-  assign T250 = T252 >= T251;
-  assign T251 = {16'h0/* 0*/, 1'h1/* 1*/};
-  assign T252 = io_exmcache_callRetBase[5'h1f/* 31*/:4'hf/* 15*/];
-  assign T253 = io_exmcache_doCallRet && io_ena_in;
-  assign T254 = T249 && T255;
-  assign T255 = T262 && mcache_valid_vec_1;
-  assign T256 = T259 || T257;
-  assign T257 = T31 && T258;
-  assign T258 = T27[1'h1/* 1*/:1'h1/* 1*/];
-  assign T259 = io_mcache_ctrlrepl_w_tag && T260;
-  assign T260 = T239[1'h1/* 1*/:1'h1/* 1*/];
-  assign T261 = T257 ? 1'h0/* 0*/ : 1'h1/* 1*/;
-  assign T262 = io_exmcache_callRetBase == mcache_addr_vec_1;
-  assign T263 = io_mcache_ctrlrepl_w_tag && T264;
-  assign T264 = T246[1'h1/* 1*/:1'h1/* 1*/];
-  assign T265 = T249 && T266;
-  assign T266 = T273 && mcache_valid_vec_2;
-  assign T267 = T270 || T268;
-  assign T268 = T31 && T269;
-  assign T269 = T27[2'h2/* 2*/:2'h2/* 2*/];
-  assign T270 = io_mcache_ctrlrepl_w_tag && T271;
-  assign T271 = T239[2'h2/* 2*/:2'h2/* 2*/];
-  assign T272 = T268 ? 1'h0/* 0*/ : 1'h1/* 1*/;
-  assign T273 = io_exmcache_callRetBase == mcache_addr_vec_2;
-  assign T274 = io_mcache_ctrlrepl_w_tag && T275;
-  assign T275 = T246[2'h2/* 2*/:2'h2/* 2*/];
-  assign T276 = T249 && T277;
-  assign T277 = T284 && mcache_valid_vec_3;
-  assign T278 = T281 || T279;
-  assign T279 = T31 && T280;
-  assign T280 = T27[2'h3/* 3*/:2'h3/* 3*/];
-  assign T281 = io_mcache_ctrlrepl_w_tag && T282;
-  assign T282 = T239[2'h3/* 3*/:2'h3/* 3*/];
-  assign T283 = T279 ? 1'h0/* 0*/ : 1'h1/* 1*/;
-  assign T284 = io_exmcache_callRetBase == mcache_addr_vec_3;
-  assign T285 = io_mcache_ctrlrepl_w_tag && T286;
-  assign T286 = T246[2'h3/* 3*/:2'h3/* 3*/];
-  assign T287 = T249 && T288;
-  assign T288 = T295 && mcache_valid_vec_4;
-  assign T289 = T292 || T290;
-  assign T290 = T31 && T291;
-  assign T291 = T27[3'h4/* 4*/:3'h4/* 4*/];
-  assign T292 = io_mcache_ctrlrepl_w_tag && T293;
-  assign T293 = T239[3'h4/* 4*/:3'h4/* 4*/];
-  assign T294 = T290 ? 1'h0/* 0*/ : 1'h1/* 1*/;
-  assign T295 = io_exmcache_callRetBase == mcache_addr_vec_4;
-  assign T296 = io_mcache_ctrlrepl_w_tag && T297;
-  assign T297 = T246[3'h4/* 4*/:3'h4/* 4*/];
-  assign T298 = T249 && T299;
-  assign T299 = T306 && mcache_valid_vec_5;
-  assign T300 = T303 || T301;
-  assign T301 = T31 && T302;
-  assign T302 = T27[3'h5/* 5*/:3'h5/* 5*/];
-  assign T303 = io_mcache_ctrlrepl_w_tag && T304;
-  assign T304 = T239[3'h5/* 5*/:3'h5/* 5*/];
-  assign T305 = T301 ? 1'h0/* 0*/ : 1'h1/* 1*/;
-  assign T306 = io_exmcache_callRetBase == mcache_addr_vec_5;
-  assign T307 = io_mcache_ctrlrepl_w_tag && T308;
-  assign T308 = T246[3'h5/* 5*/:3'h5/* 5*/];
-  assign T309 = T249 && T310;
-  assign T310 = T317 && mcache_valid_vec_6;
-  assign T311 = T314 || T312;
-  assign T312 = T31 && T313;
-  assign T313 = T27[3'h6/* 6*/:3'h6/* 6*/];
-  assign T314 = io_mcache_ctrlrepl_w_tag && T315;
-  assign T315 = T239[3'h6/* 6*/:3'h6/* 6*/];
-  assign T316 = T312 ? 1'h0/* 0*/ : 1'h1/* 1*/;
-  assign T317 = io_exmcache_callRetBase == mcache_addr_vec_6;
-  assign T318 = io_mcache_ctrlrepl_w_tag && T319;
-  assign T319 = T246[3'h6/* 6*/:3'h6/* 6*/];
-  assign T320 = T249 && T321;
-  assign T321 = T328 && mcache_valid_vec_7;
-  assign T322 = T325 || T323;
-  assign T323 = T31 && T324;
-  assign T324 = T27[3'h7/* 7*/:3'h7/* 7*/];
-  assign T325 = io_mcache_ctrlrepl_w_tag && T326;
-  assign T326 = T239[3'h7/* 7*/:3'h7/* 7*/];
-  assign T327 = T323 ? 1'h0/* 0*/ : 1'h1/* 1*/;
-  assign T328 = io_exmcache_callRetBase == mcache_addr_vec_7;
-  assign T329 = io_mcache_ctrlrepl_w_tag && T330;
-  assign T330 = T246[3'h7/* 7*/:3'h7/* 7*/];
-  assign T331 = T249 && T332;
-  assign T332 = T339 && mcache_valid_vec_8;
-  assign T333 = T336 || T334;
-  assign T334 = T31 && T335;
-  assign T335 = T27[4'h8/* 8*/:4'h8/* 8*/];
-  assign T336 = io_mcache_ctrlrepl_w_tag && T337;
-  assign T337 = T239[4'h8/* 8*/:4'h8/* 8*/];
-  assign T338 = T334 ? 1'h0/* 0*/ : 1'h1/* 1*/;
-  assign T339 = io_exmcache_callRetBase == mcache_addr_vec_8;
-  assign T340 = io_mcache_ctrlrepl_w_tag && T341;
-  assign T341 = T246[4'h8/* 8*/:4'h8/* 8*/];
-  assign T342 = T249 && T343;
-  assign T343 = T350 && mcache_valid_vec_9;
-  assign T344 = T347 || T345;
-  assign T345 = T31 && T346;
-  assign T346 = T27[4'h9/* 9*/:4'h9/* 9*/];
-  assign T347 = io_mcache_ctrlrepl_w_tag && T348;
-  assign T348 = T239[4'h9/* 9*/:4'h9/* 9*/];
-  assign T349 = T345 ? 1'h0/* 0*/ : 1'h1/* 1*/;
-  assign T350 = io_exmcache_callRetBase == mcache_addr_vec_9;
-  assign T351 = io_mcache_ctrlrepl_w_tag && T352;
-  assign T352 = T246[4'h9/* 9*/:4'h9/* 9*/];
-  assign T353 = T249 && T354;
-  assign T354 = T361 && mcache_valid_vec_10;
-  assign T355 = T358 || T356;
-  assign T356 = T31 && T357;
-  assign T357 = T27[4'ha/* 10*/:4'ha/* 10*/];
-  assign T358 = io_mcache_ctrlrepl_w_tag && T359;
-  assign T359 = T239[4'ha/* 10*/:4'ha/* 10*/];
-  assign T360 = T356 ? 1'h0/* 0*/ : 1'h1/* 1*/;
-  assign T361 = io_exmcache_callRetBase == mcache_addr_vec_10;
-  assign T362 = io_mcache_ctrlrepl_w_tag && T363;
-  assign T363 = T246[4'ha/* 10*/:4'ha/* 10*/];
-  assign T364 = T249 && T365;
-  assign T365 = T372 && mcache_valid_vec_11;
-  assign T366 = T369 || T367;
-  assign T367 = T31 && T368;
-  assign T368 = T27[4'hb/* 11*/:4'hb/* 11*/];
-  assign T369 = io_mcache_ctrlrepl_w_tag && T370;
-  assign T370 = T239[4'hb/* 11*/:4'hb/* 11*/];
-  assign T371 = T367 ? 1'h0/* 0*/ : 1'h1/* 1*/;
-  assign T372 = io_exmcache_callRetBase == mcache_addr_vec_11;
-  assign T373 = io_mcache_ctrlrepl_w_tag && T374;
-  assign T374 = T246[4'hb/* 11*/:4'hb/* 11*/];
-  assign T375 = T249 && T376;
-  assign T376 = T383 && mcache_valid_vec_12;
-  assign T377 = T380 || T378;
-  assign T378 = T31 && T379;
-  assign T379 = T27[4'hc/* 12*/:4'hc/* 12*/];
-  assign T380 = io_mcache_ctrlrepl_w_tag && T381;
-  assign T381 = T239[4'hc/* 12*/:4'hc/* 12*/];
-  assign T382 = T378 ? 1'h0/* 0*/ : 1'h1/* 1*/;
-  assign T383 = io_exmcache_callRetBase == mcache_addr_vec_12;
-  assign T384 = io_mcache_ctrlrepl_w_tag && T385;
-  assign T385 = T246[4'hc/* 12*/:4'hc/* 12*/];
-  assign T386 = T249 && T387;
-  assign T387 = T394 && mcache_valid_vec_13;
-  assign T388 = T391 || T389;
-  assign T389 = T31 && T390;
-  assign T390 = T27[4'hd/* 13*/:4'hd/* 13*/];
-  assign T391 = io_mcache_ctrlrepl_w_tag && T392;
-  assign T392 = T239[4'hd/* 13*/:4'hd/* 13*/];
-  assign T393 = T389 ? 1'h0/* 0*/ : 1'h1/* 1*/;
-  assign T394 = io_exmcache_callRetBase == mcache_addr_vec_13;
-  assign T395 = io_mcache_ctrlrepl_w_tag && T396;
-  assign T396 = T246[4'hd/* 13*/:4'hd/* 13*/];
-  assign T397 = T249 && T398;
-  assign T398 = T405 && mcache_valid_vec_14;
-  assign T399 = T402 || T400;
-  assign T400 = T31 && T401;
-  assign T401 = T27[4'he/* 14*/:4'he/* 14*/];
-  assign T402 = io_mcache_ctrlrepl_w_tag && T403;
-  assign T403 = T239[4'he/* 14*/:4'he/* 14*/];
-  assign T404 = T400 ? 1'h0/* 0*/ : 1'h1/* 1*/;
-  assign T405 = io_exmcache_callRetBase == mcache_addr_vec_14;
-  assign T406 = io_mcache_ctrlrepl_w_tag && T407;
-  assign T407 = T246[4'he/* 14*/:4'he/* 14*/];
-  assign T408 = T249 && T409;
-  assign T409 = T416 && mcache_valid_vec_15;
-  assign T410 = T413 || T411;
-  assign T411 = T31 && T412;
-  assign T412 = T27[4'hf/* 15*/:4'hf/* 15*/];
-  assign T413 = io_mcache_ctrlrepl_w_tag && T414;
-  assign T414 = T239[4'hf/* 15*/:4'hf/* 15*/];
-  assign T415 = T411 ? 1'h0/* 0*/ : 1'h1/* 1*/;
-  assign T416 = io_exmcache_callRetBase == mcache_addr_vec_15;
-  assign T417 = io_mcache_ctrlrepl_w_tag && T418;
-  assign T418 = T246[4'hf/* 15*/:4'hf/* 15*/];
-  assign T419 = T6 ? T422 : next_replace_pos;
-  assign T420 = next_replace_pos + T421;
-  assign T421 = io_mcache_ctrlrepl_w_data[4'h9/* 9*/:1'h0/* 0*/];
-  assign T422 = T430 | mergePosVec_15;
-  assign mergePosVec_15 = T423;
-  assign T423 = T408 ? mcache_pos_vec_15 : T424;
-  assign T424 = {9'h0/* 0*/, 1'h0/* 0*/};
-  assign T425 = io_mcache_ctrlrepl_w_tag && T426;
-  assign T426 = T427[4'hf/* 15*/:4'hf/* 15*/];
-  assign T427 = T428[4'hf/* 15*/:1'h0/* 0*/];
-  assign T428 = 16'h1/* 1*/ << T429;
-  assign T429 = next_index_tag;
-  assign T430 = T435 | mergePosVec_14;
-  assign mergePosVec_14 = T431;
-  assign T431 = T397 ? mcache_pos_vec_14 : T432;
-  assign T432 = {9'h0/* 0*/, 1'h0/* 0*/};
-  assign T433 = io_mcache_ctrlrepl_w_tag && T434;
-  assign T434 = T427[4'he/* 14*/:4'he/* 14*/];
-  assign T435 = T440 | mergePosVec_13;
-  assign mergePosVec_13 = T436;
-  assign T436 = T386 ? mcache_pos_vec_13 : T437;
-  assign T437 = {9'h0/* 0*/, 1'h0/* 0*/};
-  assign T438 = io_mcache_ctrlrepl_w_tag && T439;
-  assign T439 = T427[4'hd/* 13*/:4'hd/* 13*/];
-  assign T440 = T445 | mergePosVec_12;
-  assign mergePosVec_12 = T441;
-  assign T441 = T375 ? mcache_pos_vec_12 : T442;
-  assign T442 = {9'h0/* 0*/, 1'h0/* 0*/};
-  assign T443 = io_mcache_ctrlrepl_w_tag && T444;
-  assign T444 = T427[4'hc/* 12*/:4'hc/* 12*/];
-  assign T445 = T450 | mergePosVec_11;
-  assign mergePosVec_11 = T446;
-  assign T446 = T364 ? mcache_pos_vec_11 : T447;
-  assign T447 = {9'h0/* 0*/, 1'h0/* 0*/};
-  assign T448 = io_mcache_ctrlrepl_w_tag && T449;
-  assign T449 = T427[4'hb/* 11*/:4'hb/* 11*/];
-  assign T450 = T455 | mergePosVec_10;
-  assign mergePosVec_10 = T451;
-  assign T451 = T353 ? mcache_pos_vec_10 : T452;
-  assign T452 = {9'h0/* 0*/, 1'h0/* 0*/};
-  assign T453 = io_mcache_ctrlrepl_w_tag && T454;
-  assign T454 = T427[4'ha/* 10*/:4'ha/* 10*/];
-  assign T455 = T460 | mergePosVec_9;
-  assign mergePosVec_9 = T456;
-  assign T456 = T342 ? mcache_pos_vec_9 : T457;
-  assign T457 = {9'h0/* 0*/, 1'h0/* 0*/};
-  assign T458 = io_mcache_ctrlrepl_w_tag && T459;
-  assign T459 = T427[4'h9/* 9*/:4'h9/* 9*/];
-  assign T460 = T465 | mergePosVec_8;
-  assign mergePosVec_8 = T461;
-  assign T461 = T331 ? mcache_pos_vec_8 : T462;
-  assign T462 = {9'h0/* 0*/, 1'h0/* 0*/};
-  assign T463 = io_mcache_ctrlrepl_w_tag && T464;
-  assign T464 = T427[4'h8/* 8*/:4'h8/* 8*/];
-  assign T465 = T470 | mergePosVec_7;
-  assign mergePosVec_7 = T466;
-  assign T466 = T320 ? mcache_pos_vec_7 : T467;
-  assign T467 = {9'h0/* 0*/, 1'h0/* 0*/};
-  assign T468 = io_mcache_ctrlrepl_w_tag && T469;
-  assign T469 = T427[3'h7/* 7*/:3'h7/* 7*/];
-  assign T470 = T475 | mergePosVec_6;
-  assign mergePosVec_6 = T471;
-  assign T471 = T309 ? mcache_pos_vec_6 : T472;
-  assign T472 = {9'h0/* 0*/, 1'h0/* 0*/};
-  assign T473 = io_mcache_ctrlrepl_w_tag && T474;
-  assign T474 = T427[3'h6/* 6*/:3'h6/* 6*/];
-  assign T475 = T480 | mergePosVec_5;
-  assign mergePosVec_5 = T476;
-  assign T476 = T298 ? mcache_pos_vec_5 : T477;
-  assign T477 = {9'h0/* 0*/, 1'h0/* 0*/};
-  assign T478 = io_mcache_ctrlrepl_w_tag && T479;
-  assign T479 = T427[3'h5/* 5*/:3'h5/* 5*/];
-  assign T480 = T485 | mergePosVec_4;
-  assign mergePosVec_4 = T481;
-  assign T481 = T287 ? mcache_pos_vec_4 : T482;
-  assign T482 = {9'h0/* 0*/, 1'h0/* 0*/};
-  assign T483 = io_mcache_ctrlrepl_w_tag && T484;
-  assign T484 = T427[3'h4/* 4*/:3'h4/* 4*/];
-  assign T485 = T490 | mergePosVec_3;
-  assign mergePosVec_3 = T486;
-  assign T486 = T276 ? mcache_pos_vec_3 : T487;
-  assign T487 = {9'h0/* 0*/, 1'h0/* 0*/};
-  assign T488 = io_mcache_ctrlrepl_w_tag && T489;
-  assign T489 = T427[2'h3/* 3*/:2'h3/* 3*/];
-  assign T490 = T495 | mergePosVec_2;
-  assign mergePosVec_2 = T491;
-  assign T491 = T265 ? mcache_pos_vec_2 : T492;
-  assign T492 = {9'h0/* 0*/, 1'h0/* 0*/};
-  assign T493 = io_mcache_ctrlrepl_w_tag && T494;
-  assign T494 = T427[2'h2/* 2*/:2'h2/* 2*/];
-  assign T495 = T500 | mergePosVec_1;
-  assign mergePosVec_1 = T496;
-  assign T496 = T254 ? mcache_pos_vec_1 : T497;
-  assign T497 = {9'h0/* 0*/, 1'h0/* 0*/};
-  assign T498 = io_mcache_ctrlrepl_w_tag && T499;
-  assign T499 = T427[1'h1/* 1*/:1'h1/* 1*/];
-  assign T500 = T505 | mergePosVec_0;
-  assign mergePosVec_0 = T501;
-  assign T501 = T22 ? mcache_pos_vec_0 : T502;
+  assign io_mcachemem_in_addrOdd = addrOdd;
+  assign addrOdd = io_mcache_ctrlrepl_addrOdd[4'h9/* 9*/:1'h1/* 1*/];
+  assign io_mcachemem_in_addrEven = addrEven;
+  assign addrEven = io_mcache_ctrlrepl_addrEven[4'h9/* 9*/:1'h1/* 1*/];
+  assign io_mcachemem_in_wAddr = wAddr;
+  assign wAddr = T0[4'h9/* 9*/:1'h1/* 1*/];
+  assign T0 = T1 + io_mcache_ctrlrepl_wAddr;
+  assign T1 = {22'h0/* 0*/, wrPosReg};
+  assign T2 = T246 || T3;
+  assign T3 = T246 && hit;
+  assign hit = T4;
+  assign T4 = T405 ? 1'h1/* 1*/ : T5;
+  assign T5 = T394 ? 1'h1/* 1*/ : T6;
+  assign T6 = T383 ? 1'h1/* 1*/ : T7;
+  assign T7 = T372 ? 1'h1/* 1*/ : T8;
+  assign T8 = T361 ? 1'h1/* 1*/ : T9;
+  assign T9 = T350 ? 1'h1/* 1*/ : T10;
+  assign T10 = T339 ? 1'h1/* 1*/ : T11;
+  assign T11 = T328 ? 1'h1/* 1*/ : T12;
+  assign T12 = T317 ? 1'h1/* 1*/ : T13;
+  assign T13 = T306 ? 1'h1/* 1*/ : T14;
+  assign T14 = T295 ? 1'h1/* 1*/ : T15;
+  assign T15 = T284 ? 1'h1/* 1*/ : T16;
+  assign T16 = T273 ? 1'h1/* 1*/ : T17;
+  assign T17 = T262 ? 1'h1/* 1*/ : T18;
+  assign T18 = T251 ? 1'h1/* 1*/ : T19;
+  assign T19 = T246 && T20;
+  assign T20 = T240 && mcacheValidVec_0;
+  assign T21 = T234 || T22;
+  assign T22 = T28 && T23;
+  assign T23 = T24[1'h0/* 0*/:1'h0/* 0*/];
+  assign T24 = T25[4'hf/* 15*/:1'h0/* 0*/];
+  assign T25 = 16'h1/* 1*/ << T26;
+  assign T26 = nextTagReg;
+  assign T27 = T226 || T28;
+  assign T28 = $signed(freeSpaceReg) < $signed(T29);
+  assign T29 = {11'h0/* 0*/, 1'h0/* 0*/};
+  assign T30 = io_mcache_ctrlrepl_wTag || T28;
+  assign T31 = T28 ? T193 : T32;
+  assign T32 = $signed(T189) + $signed(T33);
+  assign T33 = T34;
+  assign T34 = {1'h0/* 0*/, T35};
+  assign T35 = T188 ? T118 : T36;
+  assign T36 = T117 ? T83 : T37;
+  assign T37 = T82 ? T66 : T38;
+  assign T38 = T65 ? mcacheSizeVec_1 : mcacheSizeVec_0;
+  assign T39 = T45 || T40;
+  assign T40 = T28 && T41;
+  assign T41 = T42[1'h0/* 0*/:1'h0/* 0*/];
+  assign T42 = T43[4'hf/* 15*/:1'h0/* 0*/];
+  assign T43 = 16'h1/* 1*/ << T44;
+  assign T44 = nextTagReg;
+  assign T45 = io_mcache_ctrlrepl_wTag && T46;
+  assign T46 = T47[1'h0/* 0*/:1'h0/* 0*/];
+  assign T47 = T48[4'hf/* 15*/:1'h0/* 0*/];
+  assign T48 = 16'h1/* 1*/ << T49;
+  assign T49 = nextIndexReg;
+  assign T50 = T54 ? T53 : T51;
+  assign T51 = nextIndexReg + T52;
+  assign T52 = {3'h0/* 0*/, 1'h1/* 1*/};
+  assign T53 = {3'h0/* 0*/, 1'h0/* 0*/};
+  assign T54 = nextIndexReg == 4'hf/* 15*/;
+  assign T55 = T40 ? T57 : T56;
+  assign T56 = io_mcache_ctrlrepl_wData[4'ha/* 10*/:1'h0/* 0*/];
+  assign T57 = {10'h0/* 0*/, 1'h0/* 0*/};
+  assign T58 = T61 || T59;
+  assign T59 = T28 && T60;
+  assign T60 = T42[1'h1/* 1*/:1'h1/* 1*/];
+  assign T61 = io_mcache_ctrlrepl_wTag && T62;
+  assign T62 = T47[1'h1/* 1*/:1'h1/* 1*/];
+  assign T63 = T59 ? T64 : T56;
+  assign T64 = {10'h0/* 0*/, 1'h0/* 0*/};
+  assign T65 = T49[1'h0/* 0*/:1'h0/* 0*/];
+  assign T66 = T81 ? mcacheSizeVec_3 : mcacheSizeVec_2;
+  assign T67 = T70 || T68;
+  assign T68 = T28 && T69;
+  assign T69 = T42[2'h2/* 2*/:2'h2/* 2*/];
+  assign T70 = io_mcache_ctrlrepl_wTag && T71;
+  assign T71 = T47[2'h2/* 2*/:2'h2/* 2*/];
+  assign T72 = T68 ? T73 : T56;
+  assign T73 = {10'h0/* 0*/, 1'h0/* 0*/};
+  assign T74 = T77 || T75;
+  assign T75 = T28 && T76;
+  assign T76 = T42[2'h3/* 3*/:2'h3/* 3*/];
+  assign T77 = io_mcache_ctrlrepl_wTag && T78;
+  assign T78 = T47[2'h3/* 3*/:2'h3/* 3*/];
+  assign T79 = T75 ? T80 : T56;
+  assign T80 = {10'h0/* 0*/, 1'h0/* 0*/};
+  assign T81 = T49[1'h0/* 0*/:1'h0/* 0*/];
+  assign T82 = T49[1'h1/* 1*/:1'h1/* 1*/];
+  assign T83 = T116 ? T100 : T84;
+  assign T84 = T99 ? mcacheSizeVec_5 : mcacheSizeVec_4;
+  assign T85 = T88 || T86;
+  assign T86 = T28 && T87;
+  assign T87 = T42[3'h4/* 4*/:3'h4/* 4*/];
+  assign T88 = io_mcache_ctrlrepl_wTag && T89;
+  assign T89 = T47[3'h4/* 4*/:3'h4/* 4*/];
+  assign T90 = T86 ? T91 : T56;
+  assign T91 = {10'h0/* 0*/, 1'h0/* 0*/};
+  assign T92 = T95 || T93;
+  assign T93 = T28 && T94;
+  assign T94 = T42[3'h5/* 5*/:3'h5/* 5*/];
+  assign T95 = io_mcache_ctrlrepl_wTag && T96;
+  assign T96 = T47[3'h5/* 5*/:3'h5/* 5*/];
+  assign T97 = T93 ? T98 : T56;
+  assign T98 = {10'h0/* 0*/, 1'h0/* 0*/};
+  assign T99 = T49[1'h0/* 0*/:1'h0/* 0*/];
+  assign T100 = T115 ? mcacheSizeVec_7 : mcacheSizeVec_6;
+  assign T101 = T104 || T102;
+  assign T102 = T28 && T103;
+  assign T103 = T42[3'h6/* 6*/:3'h6/* 6*/];
+  assign T104 = io_mcache_ctrlrepl_wTag && T105;
+  assign T105 = T47[3'h6/* 6*/:3'h6/* 6*/];
+  assign T106 = T102 ? T107 : T56;
+  assign T107 = {10'h0/* 0*/, 1'h0/* 0*/};
+  assign T108 = T111 || T109;
+  assign T109 = T28 && T110;
+  assign T110 = T42[3'h7/* 7*/:3'h7/* 7*/];
+  assign T111 = io_mcache_ctrlrepl_wTag && T112;
+  assign T112 = T47[3'h7/* 7*/:3'h7/* 7*/];
+  assign T113 = T109 ? T114 : T56;
+  assign T114 = {10'h0/* 0*/, 1'h0/* 0*/};
+  assign T115 = T49[1'h0/* 0*/:1'h0/* 0*/];
+  assign T116 = T49[1'h1/* 1*/:1'h1/* 1*/];
+  assign T117 = T49[2'h2/* 2*/:2'h2/* 2*/];
+  assign T118 = T187 ? T153 : T119;
+  assign T119 = T152 ? T136 : T120;
+  assign T120 = T135 ? mcacheSizeVec_9 : mcacheSizeVec_8;
+  assign T121 = T124 || T122;
+  assign T122 = T28 && T123;
+  assign T123 = T42[4'h8/* 8*/:4'h8/* 8*/];
+  assign T124 = io_mcache_ctrlrepl_wTag && T125;
+  assign T125 = T47[4'h8/* 8*/:4'h8/* 8*/];
+  assign T126 = T122 ? T127 : T56;
+  assign T127 = {10'h0/* 0*/, 1'h0/* 0*/};
+  assign T128 = T131 || T129;
+  assign T129 = T28 && T130;
+  assign T130 = T42[4'h9/* 9*/:4'h9/* 9*/];
+  assign T131 = io_mcache_ctrlrepl_wTag && T132;
+  assign T132 = T47[4'h9/* 9*/:4'h9/* 9*/];
+  assign T133 = T129 ? T134 : T56;
+  assign T134 = {10'h0/* 0*/, 1'h0/* 0*/};
+  assign T135 = T49[1'h0/* 0*/:1'h0/* 0*/];
+  assign T136 = T151 ? mcacheSizeVec_11 : mcacheSizeVec_10;
+  assign T137 = T140 || T138;
+  assign T138 = T28 && T139;
+  assign T139 = T42[4'ha/* 10*/:4'ha/* 10*/];
+  assign T140 = io_mcache_ctrlrepl_wTag && T141;
+  assign T141 = T47[4'ha/* 10*/:4'ha/* 10*/];
+  assign T142 = T138 ? T143 : T56;
+  assign T143 = {10'h0/* 0*/, 1'h0/* 0*/};
+  assign T144 = T147 || T145;
+  assign T145 = T28 && T146;
+  assign T146 = T42[4'hb/* 11*/:4'hb/* 11*/];
+  assign T147 = io_mcache_ctrlrepl_wTag && T148;
+  assign T148 = T47[4'hb/* 11*/:4'hb/* 11*/];
+  assign T149 = T145 ? T150 : T56;
+  assign T150 = {10'h0/* 0*/, 1'h0/* 0*/};
+  assign T151 = T49[1'h0/* 0*/:1'h0/* 0*/];
+  assign T152 = T49[1'h1/* 1*/:1'h1/* 1*/];
+  assign T153 = T186 ? T170 : T154;
+  assign T154 = T169 ? mcacheSizeVec_13 : mcacheSizeVec_12;
+  assign T155 = T158 || T156;
+  assign T156 = T28 && T157;
+  assign T157 = T42[4'hc/* 12*/:4'hc/* 12*/];
+  assign T158 = io_mcache_ctrlrepl_wTag && T159;
+  assign T159 = T47[4'hc/* 12*/:4'hc/* 12*/];
+  assign T160 = T156 ? T161 : T56;
+  assign T161 = {10'h0/* 0*/, 1'h0/* 0*/};
+  assign T162 = T165 || T163;
+  assign T163 = T28 && T164;
+  assign T164 = T42[4'hd/* 13*/:4'hd/* 13*/];
+  assign T165 = io_mcache_ctrlrepl_wTag && T166;
+  assign T166 = T47[4'hd/* 13*/:4'hd/* 13*/];
+  assign T167 = T163 ? T168 : T56;
+  assign T168 = {10'h0/* 0*/, 1'h0/* 0*/};
+  assign T169 = T49[1'h0/* 0*/:1'h0/* 0*/];
+  assign T170 = T185 ? mcacheSizeVec_15 : mcacheSizeVec_14;
+  assign T171 = T174 || T172;
+  assign T172 = T28 && T173;
+  assign T173 = T42[4'he/* 14*/:4'he/* 14*/];
+  assign T174 = io_mcache_ctrlrepl_wTag && T175;
+  assign T175 = T47[4'he/* 14*/:4'he/* 14*/];
+  assign T176 = T172 ? T177 : T56;
+  assign T177 = {10'h0/* 0*/, 1'h0/* 0*/};
+  assign T178 = T181 || T179;
+  assign T179 = T28 && T180;
+  assign T180 = T42[4'hf/* 15*/:4'hf/* 15*/];
+  assign T181 = io_mcache_ctrlrepl_wTag && T182;
+  assign T182 = T47[4'hf/* 15*/:4'hf/* 15*/];
+  assign T183 = T179 ? T184 : T56;
+  assign T184 = {10'h0/* 0*/, 1'h0/* 0*/};
+  assign T185 = T49[1'h0/* 0*/:1'h0/* 0*/];
+  assign T186 = T49[1'h1/* 1*/:1'h1/* 1*/];
+  assign T187 = T49[2'h2/* 2*/:2'h2/* 2*/];
+  assign T188 = T49[2'h3/* 3*/:2'h3/* 3*/];
+  assign T189 = $signed(freeSpaceReg) - $signed(T190);
+  assign T190 = T191;
+  assign T191 = {1'h0/* 0*/, T192};
+  assign T192 = io_mcache_ctrlrepl_wData[4'ha/* 10*/:1'h0/* 0*/];
+  assign T193 = $signed(freeSpaceReg) + $signed(T194);
+  assign T194 = T195;
+  assign T195 = {1'h0/* 0*/, T196};
+  assign T196 = T225 ? T211 : T197;
+  assign T197 = T210 ? T204 : T198;
+  assign T198 = T203 ? T201 : T199;
+  assign T199 = T200 ? mcacheSizeVec_1 : mcacheSizeVec_0;
+  assign T200 = T44[1'h0/* 0*/:1'h0/* 0*/];
+  assign T201 = T202 ? mcacheSizeVec_3 : mcacheSizeVec_2;
+  assign T202 = T44[1'h0/* 0*/:1'h0/* 0*/];
+  assign T203 = T44[1'h1/* 1*/:1'h1/* 1*/];
+  assign T204 = T209 ? T207 : T205;
+  assign T205 = T206 ? mcacheSizeVec_5 : mcacheSizeVec_4;
+  assign T206 = T44[1'h0/* 0*/:1'h0/* 0*/];
+  assign T207 = T208 ? mcacheSizeVec_7 : mcacheSizeVec_6;
+  assign T208 = T44[1'h0/* 0*/:1'h0/* 0*/];
+  assign T209 = T44[1'h1/* 1*/:1'h1/* 1*/];
+  assign T210 = T44[2'h2/* 2*/:2'h2/* 2*/];
+  assign T211 = T224 ? T218 : T212;
+  assign T212 = T217 ? T215 : T213;
+  assign T213 = T214 ? mcacheSizeVec_9 : mcacheSizeVec_8;
+  assign T214 = T44[1'h0/* 0*/:1'h0/* 0*/];
+  assign T215 = T216 ? mcacheSizeVec_11 : mcacheSizeVec_10;
+  assign T216 = T44[1'h0/* 0*/:1'h0/* 0*/];
+  assign T217 = T44[1'h1/* 1*/:1'h1/* 1*/];
+  assign T218 = T223 ? T221 : T219;
+  assign T219 = T220 ? mcacheSizeVec_13 : mcacheSizeVec_12;
+  assign T220 = T44[1'h0/* 0*/:1'h0/* 0*/];
+  assign T221 = T222 ? mcacheSizeVec_15 : mcacheSizeVec_14;
+  assign T222 = T44[1'h0/* 0*/:1'h0/* 0*/];
+  assign T223 = T44[1'h1/* 1*/:1'h1/* 1*/];
+  assign T224 = T44[2'h2/* 2*/:2'h2/* 2*/];
+  assign T225 = T44[2'h3/* 3*/:2'h3/* 3*/];
+  assign T226 = io_mcache_ctrlrepl_wTag && T227;
+  assign T227 = nextTagReg == nextIndexReg;
+  assign T228 = T28 ? T229 : T50;
+  assign T229 = T233 ? T232 : T230;
+  assign T230 = nextTagReg + T231;
+  assign T231 = {3'h0/* 0*/, 1'h1/* 1*/};
+  assign T232 = {3'h0/* 0*/, 1'h0/* 0*/};
+  assign T233 = nextTagReg == 4'hf/* 15*/;
+  assign T234 = io_mcache_ctrlrepl_wTag && T235;
+  assign T235 = T236[1'h0/* 0*/:1'h0/* 0*/];
+  assign T236 = T237[4'hf/* 15*/:1'h0/* 0*/];
+  assign T237 = 16'h1/* 1*/ << T238;
+  assign T238 = nextIndexReg;
+  assign T239 = T22 ? 1'h0/* 0*/ : 1'h1/* 1*/;
+  assign T240 = io_exmcache_callRetBase == mcacheAddrVec_0;
+  assign T241 = io_mcache_ctrlrepl_wTag && T242;
+  assign T242 = T243[1'h0/* 0*/:1'h0/* 0*/];
+  assign T243 = T244[4'hf/* 15*/:1'h0/* 0*/];
+  assign T244 = 16'h1/* 1*/ << T245;
+  assign T245 = nextIndexReg;
+  assign T246 = T250 && T247;
+  assign T247 = T249 >= T248;
+  assign T248 = {16'h0/* 0*/, 1'h1/* 1*/};
+  assign T249 = io_exmcache_callRetBase[5'h1f/* 31*/:4'hf/* 15*/];
+  assign T250 = io_exmcache_doCallRet && io_ena_in;
+  assign T251 = T246 && T252;
+  assign T252 = T259 && mcacheValidVec_1;
+  assign T253 = T256 || T254;
+  assign T254 = T28 && T255;
+  assign T255 = T24[1'h1/* 1*/:1'h1/* 1*/];
+  assign T256 = io_mcache_ctrlrepl_wTag && T257;
+  assign T257 = T236[1'h1/* 1*/:1'h1/* 1*/];
+  assign T258 = T254 ? 1'h0/* 0*/ : 1'h1/* 1*/;
+  assign T259 = io_exmcache_callRetBase == mcacheAddrVec_1;
+  assign T260 = io_mcache_ctrlrepl_wTag && T261;
+  assign T261 = T243[1'h1/* 1*/:1'h1/* 1*/];
+  assign T262 = T246 && T263;
+  assign T263 = T270 && mcacheValidVec_2;
+  assign T264 = T267 || T265;
+  assign T265 = T28 && T266;
+  assign T266 = T24[2'h2/* 2*/:2'h2/* 2*/];
+  assign T267 = io_mcache_ctrlrepl_wTag && T268;
+  assign T268 = T236[2'h2/* 2*/:2'h2/* 2*/];
+  assign T269 = T265 ? 1'h0/* 0*/ : 1'h1/* 1*/;
+  assign T270 = io_exmcache_callRetBase == mcacheAddrVec_2;
+  assign T271 = io_mcache_ctrlrepl_wTag && T272;
+  assign T272 = T243[2'h2/* 2*/:2'h2/* 2*/];
+  assign T273 = T246 && T274;
+  assign T274 = T281 && mcacheValidVec_3;
+  assign T275 = T278 || T276;
+  assign T276 = T28 && T277;
+  assign T277 = T24[2'h3/* 3*/:2'h3/* 3*/];
+  assign T278 = io_mcache_ctrlrepl_wTag && T279;
+  assign T279 = T236[2'h3/* 3*/:2'h3/* 3*/];
+  assign T280 = T276 ? 1'h0/* 0*/ : 1'h1/* 1*/;
+  assign T281 = io_exmcache_callRetBase == mcacheAddrVec_3;
+  assign T282 = io_mcache_ctrlrepl_wTag && T283;
+  assign T283 = T243[2'h3/* 3*/:2'h3/* 3*/];
+  assign T284 = T246 && T285;
+  assign T285 = T292 && mcacheValidVec_4;
+  assign T286 = T289 || T287;
+  assign T287 = T28 && T288;
+  assign T288 = T24[3'h4/* 4*/:3'h4/* 4*/];
+  assign T289 = io_mcache_ctrlrepl_wTag && T290;
+  assign T290 = T236[3'h4/* 4*/:3'h4/* 4*/];
+  assign T291 = T287 ? 1'h0/* 0*/ : 1'h1/* 1*/;
+  assign T292 = io_exmcache_callRetBase == mcacheAddrVec_4;
+  assign T293 = io_mcache_ctrlrepl_wTag && T294;
+  assign T294 = T243[3'h4/* 4*/:3'h4/* 4*/];
+  assign T295 = T246 && T296;
+  assign T296 = T303 && mcacheValidVec_5;
+  assign T297 = T300 || T298;
+  assign T298 = T28 && T299;
+  assign T299 = T24[3'h5/* 5*/:3'h5/* 5*/];
+  assign T300 = io_mcache_ctrlrepl_wTag && T301;
+  assign T301 = T236[3'h5/* 5*/:3'h5/* 5*/];
+  assign T302 = T298 ? 1'h0/* 0*/ : 1'h1/* 1*/;
+  assign T303 = io_exmcache_callRetBase == mcacheAddrVec_5;
+  assign T304 = io_mcache_ctrlrepl_wTag && T305;
+  assign T305 = T243[3'h5/* 5*/:3'h5/* 5*/];
+  assign T306 = T246 && T307;
+  assign T307 = T314 && mcacheValidVec_6;
+  assign T308 = T311 || T309;
+  assign T309 = T28 && T310;
+  assign T310 = T24[3'h6/* 6*/:3'h6/* 6*/];
+  assign T311 = io_mcache_ctrlrepl_wTag && T312;
+  assign T312 = T236[3'h6/* 6*/:3'h6/* 6*/];
+  assign T313 = T309 ? 1'h0/* 0*/ : 1'h1/* 1*/;
+  assign T314 = io_exmcache_callRetBase == mcacheAddrVec_6;
+  assign T315 = io_mcache_ctrlrepl_wTag && T316;
+  assign T316 = T243[3'h6/* 6*/:3'h6/* 6*/];
+  assign T317 = T246 && T318;
+  assign T318 = T325 && mcacheValidVec_7;
+  assign T319 = T322 || T320;
+  assign T320 = T28 && T321;
+  assign T321 = T24[3'h7/* 7*/:3'h7/* 7*/];
+  assign T322 = io_mcache_ctrlrepl_wTag && T323;
+  assign T323 = T236[3'h7/* 7*/:3'h7/* 7*/];
+  assign T324 = T320 ? 1'h0/* 0*/ : 1'h1/* 1*/;
+  assign T325 = io_exmcache_callRetBase == mcacheAddrVec_7;
+  assign T326 = io_mcache_ctrlrepl_wTag && T327;
+  assign T327 = T243[3'h7/* 7*/:3'h7/* 7*/];
+  assign T328 = T246 && T329;
+  assign T329 = T336 && mcacheValidVec_8;
+  assign T330 = T333 || T331;
+  assign T331 = T28 && T332;
+  assign T332 = T24[4'h8/* 8*/:4'h8/* 8*/];
+  assign T333 = io_mcache_ctrlrepl_wTag && T334;
+  assign T334 = T236[4'h8/* 8*/:4'h8/* 8*/];
+  assign T335 = T331 ? 1'h0/* 0*/ : 1'h1/* 1*/;
+  assign T336 = io_exmcache_callRetBase == mcacheAddrVec_8;
+  assign T337 = io_mcache_ctrlrepl_wTag && T338;
+  assign T338 = T243[4'h8/* 8*/:4'h8/* 8*/];
+  assign T339 = T246 && T340;
+  assign T340 = T347 && mcacheValidVec_9;
+  assign T341 = T344 || T342;
+  assign T342 = T28 && T343;
+  assign T343 = T24[4'h9/* 9*/:4'h9/* 9*/];
+  assign T344 = io_mcache_ctrlrepl_wTag && T345;
+  assign T345 = T236[4'h9/* 9*/:4'h9/* 9*/];
+  assign T346 = T342 ? 1'h0/* 0*/ : 1'h1/* 1*/;
+  assign T347 = io_exmcache_callRetBase == mcacheAddrVec_9;
+  assign T348 = io_mcache_ctrlrepl_wTag && T349;
+  assign T349 = T243[4'h9/* 9*/:4'h9/* 9*/];
+  assign T350 = T246 && T351;
+  assign T351 = T358 && mcacheValidVec_10;
+  assign T352 = T355 || T353;
+  assign T353 = T28 && T354;
+  assign T354 = T24[4'ha/* 10*/:4'ha/* 10*/];
+  assign T355 = io_mcache_ctrlrepl_wTag && T356;
+  assign T356 = T236[4'ha/* 10*/:4'ha/* 10*/];
+  assign T357 = T353 ? 1'h0/* 0*/ : 1'h1/* 1*/;
+  assign T358 = io_exmcache_callRetBase == mcacheAddrVec_10;
+  assign T359 = io_mcache_ctrlrepl_wTag && T360;
+  assign T360 = T243[4'ha/* 10*/:4'ha/* 10*/];
+  assign T361 = T246 && T362;
+  assign T362 = T369 && mcacheValidVec_11;
+  assign T363 = T366 || T364;
+  assign T364 = T28 && T365;
+  assign T365 = T24[4'hb/* 11*/:4'hb/* 11*/];
+  assign T366 = io_mcache_ctrlrepl_wTag && T367;
+  assign T367 = T236[4'hb/* 11*/:4'hb/* 11*/];
+  assign T368 = T364 ? 1'h0/* 0*/ : 1'h1/* 1*/;
+  assign T369 = io_exmcache_callRetBase == mcacheAddrVec_11;
+  assign T370 = io_mcache_ctrlrepl_wTag && T371;
+  assign T371 = T243[4'hb/* 11*/:4'hb/* 11*/];
+  assign T372 = T246 && T373;
+  assign T373 = T380 && mcacheValidVec_12;
+  assign T374 = T377 || T375;
+  assign T375 = T28 && T376;
+  assign T376 = T24[4'hc/* 12*/:4'hc/* 12*/];
+  assign T377 = io_mcache_ctrlrepl_wTag && T378;
+  assign T378 = T236[4'hc/* 12*/:4'hc/* 12*/];
+  assign T379 = T375 ? 1'h0/* 0*/ : 1'h1/* 1*/;
+  assign T380 = io_exmcache_callRetBase == mcacheAddrVec_12;
+  assign T381 = io_mcache_ctrlrepl_wTag && T382;
+  assign T382 = T243[4'hc/* 12*/:4'hc/* 12*/];
+  assign T383 = T246 && T384;
+  assign T384 = T391 && mcacheValidVec_13;
+  assign T385 = T388 || T386;
+  assign T386 = T28 && T387;
+  assign T387 = T24[4'hd/* 13*/:4'hd/* 13*/];
+  assign T388 = io_mcache_ctrlrepl_wTag && T389;
+  assign T389 = T236[4'hd/* 13*/:4'hd/* 13*/];
+  assign T390 = T386 ? 1'h0/* 0*/ : 1'h1/* 1*/;
+  assign T391 = io_exmcache_callRetBase == mcacheAddrVec_13;
+  assign T392 = io_mcache_ctrlrepl_wTag && T393;
+  assign T393 = T243[4'hd/* 13*/:4'hd/* 13*/];
+  assign T394 = T246 && T395;
+  assign T395 = T402 && mcacheValidVec_14;
+  assign T396 = T399 || T397;
+  assign T397 = T28 && T398;
+  assign T398 = T24[4'he/* 14*/:4'he/* 14*/];
+  assign T399 = io_mcache_ctrlrepl_wTag && T400;
+  assign T400 = T236[4'he/* 14*/:4'he/* 14*/];
+  assign T401 = T397 ? 1'h0/* 0*/ : 1'h1/* 1*/;
+  assign T402 = io_exmcache_callRetBase == mcacheAddrVec_14;
+  assign T403 = io_mcache_ctrlrepl_wTag && T404;
+  assign T404 = T243[4'he/* 14*/:4'he/* 14*/];
+  assign T405 = T246 && T406;
+  assign T406 = T413 && mcacheValidVec_15;
+  assign T407 = T410 || T408;
+  assign T408 = T28 && T409;
+  assign T409 = T24[4'hf/* 15*/:4'hf/* 15*/];
+  assign T410 = io_mcache_ctrlrepl_wTag && T411;
+  assign T411 = T236[4'hf/* 15*/:4'hf/* 15*/];
+  assign T412 = T408 ? 1'h0/* 0*/ : 1'h1/* 1*/;
+  assign T413 = io_exmcache_callRetBase == mcacheAddrVec_15;
+  assign T414 = io_mcache_ctrlrepl_wTag && T415;
+  assign T415 = T243[4'hf/* 15*/:4'hf/* 15*/];
+  assign T416 = T3 ? T419 : nextPosReg;
+  assign T417 = nextPosReg + T418;
+  assign T418 = io_mcache_ctrlrepl_wData[4'h9/* 9*/:1'h0/* 0*/];
+  assign T419 = T427 | mergePosVec_15;
+  assign mergePosVec_15 = T420;
+  assign T420 = T405 ? mcachePosVec_15 : T421;
+  assign T421 = {9'h0/* 0*/, 1'h0/* 0*/};
+  assign T422 = io_mcache_ctrlrepl_wTag && T423;
+  assign T423 = T424[4'hf/* 15*/:4'hf/* 15*/];
+  assign T424 = T425[4'hf/* 15*/:1'h0/* 0*/];
+  assign T425 = 16'h1/* 1*/ << T426;
+  assign T426 = nextIndexReg;
+  assign T427 = T432 | mergePosVec_14;
+  assign mergePosVec_14 = T428;
+  assign T428 = T394 ? mcachePosVec_14 : T429;
+  assign T429 = {9'h0/* 0*/, 1'h0/* 0*/};
+  assign T430 = io_mcache_ctrlrepl_wTag && T431;
+  assign T431 = T424[4'he/* 14*/:4'he/* 14*/];
+  assign T432 = T437 | mergePosVec_13;
+  assign mergePosVec_13 = T433;
+  assign T433 = T383 ? mcachePosVec_13 : T434;
+  assign T434 = {9'h0/* 0*/, 1'h0/* 0*/};
+  assign T435 = io_mcache_ctrlrepl_wTag && T436;
+  assign T436 = T424[4'hd/* 13*/:4'hd/* 13*/];
+  assign T437 = T442 | mergePosVec_12;
+  assign mergePosVec_12 = T438;
+  assign T438 = T372 ? mcachePosVec_12 : T439;
+  assign T439 = {9'h0/* 0*/, 1'h0/* 0*/};
+  assign T440 = io_mcache_ctrlrepl_wTag && T441;
+  assign T441 = T424[4'hc/* 12*/:4'hc/* 12*/];
+  assign T442 = T447 | mergePosVec_11;
+  assign mergePosVec_11 = T443;
+  assign T443 = T361 ? mcachePosVec_11 : T444;
+  assign T444 = {9'h0/* 0*/, 1'h0/* 0*/};
+  assign T445 = io_mcache_ctrlrepl_wTag && T446;
+  assign T446 = T424[4'hb/* 11*/:4'hb/* 11*/];
+  assign T447 = T452 | mergePosVec_10;
+  assign mergePosVec_10 = T448;
+  assign T448 = T350 ? mcachePosVec_10 : T449;
+  assign T449 = {9'h0/* 0*/, 1'h0/* 0*/};
+  assign T450 = io_mcache_ctrlrepl_wTag && T451;
+  assign T451 = T424[4'ha/* 10*/:4'ha/* 10*/];
+  assign T452 = T457 | mergePosVec_9;
+  assign mergePosVec_9 = T453;
+  assign T453 = T339 ? mcachePosVec_9 : T454;
+  assign T454 = {9'h0/* 0*/, 1'h0/* 0*/};
+  assign T455 = io_mcache_ctrlrepl_wTag && T456;
+  assign T456 = T424[4'h9/* 9*/:4'h9/* 9*/];
+  assign T457 = T462 | mergePosVec_8;
+  assign mergePosVec_8 = T458;
+  assign T458 = T328 ? mcachePosVec_8 : T459;
+  assign T459 = {9'h0/* 0*/, 1'h0/* 0*/};
+  assign T460 = io_mcache_ctrlrepl_wTag && T461;
+  assign T461 = T424[4'h8/* 8*/:4'h8/* 8*/];
+  assign T462 = T467 | mergePosVec_7;
+  assign mergePosVec_7 = T463;
+  assign T463 = T317 ? mcachePosVec_7 : T464;
+  assign T464 = {9'h0/* 0*/, 1'h0/* 0*/};
+  assign T465 = io_mcache_ctrlrepl_wTag && T466;
+  assign T466 = T424[3'h7/* 7*/:3'h7/* 7*/];
+  assign T467 = T472 | mergePosVec_6;
+  assign mergePosVec_6 = T468;
+  assign T468 = T306 ? mcachePosVec_6 : T469;
+  assign T469 = {9'h0/* 0*/, 1'h0/* 0*/};
+  assign T470 = io_mcache_ctrlrepl_wTag && T471;
+  assign T471 = T424[3'h6/* 6*/:3'h6/* 6*/];
+  assign T472 = T477 | mergePosVec_5;
+  assign mergePosVec_5 = T473;
+  assign T473 = T295 ? mcachePosVec_5 : T474;
+  assign T474 = {9'h0/* 0*/, 1'h0/* 0*/};
+  assign T475 = io_mcache_ctrlrepl_wTag && T476;
+  assign T476 = T424[3'h5/* 5*/:3'h5/* 5*/];
+  assign T477 = T482 | mergePosVec_4;
+  assign mergePosVec_4 = T478;
+  assign T478 = T284 ? mcachePosVec_4 : T479;
+  assign T479 = {9'h0/* 0*/, 1'h0/* 0*/};
+  assign T480 = io_mcache_ctrlrepl_wTag && T481;
+  assign T481 = T424[3'h4/* 4*/:3'h4/* 4*/];
+  assign T482 = T487 | mergePosVec_3;
+  assign mergePosVec_3 = T483;
+  assign T483 = T273 ? mcachePosVec_3 : T484;
+  assign T484 = {9'h0/* 0*/, 1'h0/* 0*/};
+  assign T485 = io_mcache_ctrlrepl_wTag && T486;
+  assign T486 = T424[2'h3/* 3*/:2'h3/* 3*/];
+  assign T487 = T492 | mergePosVec_2;
+  assign mergePosVec_2 = T488;
+  assign T488 = T262 ? mcachePosVec_2 : T489;
+  assign T489 = {9'h0/* 0*/, 1'h0/* 0*/};
+  assign T490 = io_mcache_ctrlrepl_wTag && T491;
+  assign T491 = T424[2'h2/* 2*/:2'h2/* 2*/];
+  assign T492 = T497 | mergePosVec_1;
+  assign mergePosVec_1 = T493;
+  assign T493 = T251 ? mcachePosVec_1 : T494;
+  assign T494 = {9'h0/* 0*/, 1'h0/* 0*/};
+  assign T495 = io_mcache_ctrlrepl_wTag && T496;
+  assign T496 = T424[1'h1/* 1*/:1'h1/* 1*/];
+  assign T497 = T502 | mergePosVec_0;
+  assign mergePosVec_0 = T498;
+  assign T498 = T19 ? mcachePosVec_0 : T499;
+  assign T499 = {9'h0/* 0*/, 1'h0/* 0*/};
+  assign T500 = io_mcache_ctrlrepl_wTag && T501;
+  assign T501 = T424[1'h0/* 0*/:1'h0/* 0*/];
   assign T502 = {9'h0/* 0*/, 1'h0/* 0*/};
-  assign T503 = io_mcache_ctrlrepl_w_tag && T504;
-  assign T504 = T427[1'h0/* 0*/:1'h0/* 0*/];
-  assign T505 = {9'h0/* 0*/, 1'h0/* 0*/};
-  assign io_mcachemem_in_w_data = io_mcache_ctrlrepl_w_data;
-  assign io_mcachemem_in_w_odd = T506;
-  assign T506 = wr_parity ? io_mcache_ctrlrepl_w_enable : 1'h0/* 0*/;
-  assign wr_parity = io_mcache_ctrlrepl_w_addr[1'h0/* 0*/:1'h0/* 0*/];
-  assign io_mcachemem_in_w_even = T507;
-  assign T507 = wr_parity ? 1'h0/* 0*/ : io_mcache_ctrlrepl_w_enable;
-  assign io_mcache_replctrl_pos_offset = T508;
-  assign T508 = {1'h0/* 0*/, wrPosReg};
+  assign io_mcachemem_in_wData = io_mcache_ctrlrepl_wData;
+  assign io_mcachemem_in_wOdd = T503;
+  assign T503 = wParity ? io_mcache_ctrlrepl_wEna : 1'h0/* 0*/;
+  assign wParity = io_mcache_ctrlrepl_wAddr[1'h0/* 0*/:1'h0/* 0*/];
+  assign io_mcachemem_in_wEven = T504;
+  assign T504 = wParity ? 1'h0/* 0*/ : io_mcache_ctrlrepl_wEna;
   assign io_mcache_replctrl_hit = hitReg;
-  assign T509 = T510 || io_mcache_ctrlrepl_w_tag;
-  assign T510 = T511 || T408;
-  assign T511 = T512 || T397;
-  assign T512 = T513 || T386;
-  assign T513 = T514 || T375;
-  assign T514 = T515 || T364;
-  assign T515 = T516 || T353;
-  assign T516 = T517 || T342;
-  assign T517 = T518 || T331;
-  assign T518 = T519 || T320;
-  assign T519 = T520 || T309;
-  assign T520 = T521 || T298;
-  assign T521 = T522 || T287;
-  assign T522 = T523 || T276;
-  assign T523 = T524 || T265;
-  assign T524 = T525 || T254;
-  assign T525 = T249 || T22;
-  assign T526 = io_mcache_ctrlrepl_w_tag ? 1'h1/* 1*/ : T527;
-  assign T527 = T408 ? 1'h1/* 1*/ : T528;
-  assign T528 = T397 ? 1'h1/* 1*/ : T529;
-  assign T529 = T386 ? 1'h1/* 1*/ : T530;
-  assign T530 = T375 ? 1'h1/* 1*/ : T531;
-  assign T531 = T364 ? 1'h1/* 1*/ : T532;
-  assign T532 = T353 ? 1'h1/* 1*/ : T533;
-  assign T533 = T342 ? 1'h1/* 1*/ : T534;
-  assign T534 = T331 ? 1'h1/* 1*/ : T535;
-  assign T535 = T320 ? 1'h1/* 1*/ : T536;
-  assign T536 = T309 ? 1'h1/* 1*/ : T537;
-  assign T537 = T298 ? 1'h1/* 1*/ : T538;
-  assign T538 = T287 ? 1'h1/* 1*/ : T539;
-  assign T539 = T276 ? 1'h1/* 1*/ : T540;
-  assign T540 = T265 ? 1'h1/* 1*/ : T541;
-  assign T541 = T254 ? 1'h1/* 1*/ : T22;
-  assign io_mcachefe_mem_sel = T542;
-  assign T542 = {selIspmReg, selMCacheReg};
-  assign T543 = T545 >= T544;
-  assign T544 = {16'h0/* 0*/, 1'h1/* 1*/};
-  assign T545 = io_exmcache_callRetBase[5'h1f/* 31*/:4'hf/* 15*/];
-  assign T546 = T548 == T547;
-  assign T547 = {17'h0/* 0*/, 1'h1/* 1*/};
-  assign T548 = io_exmcache_callRetBase[5'h1f/* 31*/:4'he/* 14*/];
+  assign T505 = T506 || io_mcache_ctrlrepl_wTag;
+  assign T506 = T507 || T405;
+  assign T507 = T508 || T394;
+  assign T508 = T509 || T383;
+  assign T509 = T510 || T372;
+  assign T510 = T511 || T361;
+  assign T511 = T512 || T350;
+  assign T512 = T513 || T339;
+  assign T513 = T514 || T328;
+  assign T514 = T515 || T317;
+  assign T515 = T516 || T306;
+  assign T516 = T517 || T295;
+  assign T517 = T518 || T284;
+  assign T518 = T519 || T273;
+  assign T519 = T520 || T262;
+  assign T520 = T521 || T251;
+  assign T521 = T246 || T19;
+  assign T522 = io_mcache_ctrlrepl_wTag ? 1'h1/* 1*/ : T523;
+  assign T523 = T405 ? 1'h1/* 1*/ : T524;
+  assign T524 = T394 ? 1'h1/* 1*/ : T525;
+  assign T525 = T383 ? 1'h1/* 1*/ : T526;
+  assign T526 = T372 ? 1'h1/* 1*/ : T527;
+  assign T527 = T361 ? 1'h1/* 1*/ : T528;
+  assign T528 = T350 ? 1'h1/* 1*/ : T529;
+  assign T529 = T339 ? 1'h1/* 1*/ : T530;
+  assign T530 = T328 ? 1'h1/* 1*/ : T531;
+  assign T531 = T317 ? 1'h1/* 1*/ : T532;
+  assign T532 = T306 ? 1'h1/* 1*/ : T533;
+  assign T533 = T295 ? 1'h1/* 1*/ : T534;
+  assign T534 = T284 ? 1'h1/* 1*/ : T535;
+  assign T535 = T273 ? 1'h1/* 1*/ : T536;
+  assign T536 = T262 ? 1'h1/* 1*/ : T537;
+  assign T537 = T251 ? 1'h1/* 1*/ : T19;
+  assign io_mcachefe_memSel = T538;
+  assign T538 = {selIspmReg, selMCacheReg};
+  assign T539 = T541 >= T540;
+  assign T540 = {16'h0/* 0*/, 1'h1/* 1*/};
+  assign T541 = io_exmcache_callRetBase[5'h1f/* 31*/:4'hf/* 15*/];
+  assign T542 = T544 == T543;
+  assign T543 = {17'h0/* 0*/, 1'h1/* 1*/};
+  assign T544 = io_exmcache_callRetBase[5'h1f/* 31*/:4'he/* 14*/];
   assign io_mcachefe_reloc = reloc;
-  assign reloc = selMCacheReg ? T552 : T549;
-  assign T549 = {17'h0/* 0*/, T550};
-  assign T550 = selIspmReg ? 15'h4000/* 16384*/ : T551;
-  assign T551 = {14'h0/* 0*/, 1'h0/* 0*/};
-  assign T552 = callRetBaseReg - T553;
-  assign T553 = {22'h0/* 0*/, T554};
-  assign T554 = posReg;
-  assign io_mcachefe_relPc = T555;
-  assign T555 = relPc[4'hb/* 11*/:1'h0/* 0*/];
-  assign relPc = callAddrReg + T556;
-  assign T556 = {18'h0/* 0*/, relBase};
-  assign relBase = selMCacheReg ? T558 : T557;
-  assign T557 = callRetBaseReg[4'hd/* 13*/:1'h0/* 0*/];
-  assign T558 = {4'h0/* 0*/, T559};
-  assign T559 = posReg;
-  assign io_mcachefe_relBase = T560;
-  assign T560 = relBase[4'ha/* 10*/:1'h0/* 0*/];
-  assign io_mcachefe_instr_b = T561;
-  assign T561 = io_mcache_ctrlrepl_instr_stall ? instr_bReg : instr_b;
-  assign instr_b = addr_parity_reg ? io_mcachemem_out_instr_even : io_mcachemem_out_instr_odd;
-  assign T562 = ! io_mcache_ctrlrepl_instr_stall;
-  assign io_mcachefe_instr_a = T563;
-  assign T563 = io_mcache_ctrlrepl_instr_stall ? instr_aReg : instr_a;
-  assign instr_a = addr_parity_reg ? io_mcachemem_out_instr_odd : io_mcachemem_out_instr_even;
-  assign io_hit_ena = hitReg;
+  assign reloc = selMCacheReg ? T548 : T545;
+  assign T545 = {17'h0/* 0*/, T546};
+  assign T546 = selIspmReg ? 15'h4000/* 16384*/ : T547;
+  assign T547 = {14'h0/* 0*/, 1'h0/* 0*/};
+  assign T548 = callRetBaseReg - T549;
+  assign T549 = {22'h0/* 0*/, T550};
+  assign T550 = posReg;
+  assign io_mcachefe_relPc = T551;
+  assign T551 = relPc[4'hb/* 11*/:1'h0/* 0*/];
+  assign relPc = callAddrReg + T552;
+  assign T552 = {18'h0/* 0*/, relBase};
+  assign relBase = selMCacheReg ? T554 : T553;
+  assign T553 = callRetBaseReg[4'hd/* 13*/:1'h0/* 0*/];
+  assign T554 = {4'h0/* 0*/, T555};
+  assign T555 = posReg;
+  assign io_mcachefe_relBase = T556;
+  assign T556 = relBase[4'ha/* 10*/:1'h0/* 0*/];
+  assign io_mcachefe_instrOdd = T557;
+  assign T557 = io_mcache_ctrlrepl_instrStall ? instrOddReg : instrOdd;
+  assign T558 = ! io_mcache_ctrlrepl_instrStall;
+  assign io_mcachefe_instrEven = T559;
+  assign T559 = io_mcache_ctrlrepl_instrStall ? instrEvenReg : instrEven;
+  assign io_hitEna = hitReg;
 
   always @(posedge clk) begin
     if(reset) begin
       wrPosReg <= 10'h0/* 0*/;
-    end else if(io_mcache_ctrlrepl_w_tag) begin
+    end else if(io_mcache_ctrlrepl_wTag) begin
       wrPosReg <= posReg;
     end
     if(reset) begin
       posReg <= 10'h0/* 0*/;
-    end else if(T5) begin
-      posReg <= T419;
+    end else if(T2) begin
+      posReg <= T416;
     end
     if(reset) begin
-      mcache_valid_vec_0 <= 1'h0/* 0*/;
-    end else if(T24) begin
-      mcache_valid_vec_0 <= T242;
+      mcacheValidVec_0 <= 1'h0/* 0*/;
+    end else if(T21) begin
+      mcacheValidVec_0 <= T239;
     end
     if(reset) begin
-      next_replace_tag <= 4'h0/* 0*/;
+      nextTagReg <= 4'h0/* 0*/;
+    end else if(T27) begin
+      nextTagReg <= T228;
+    end
+    if(reset) begin
+      freeSpaceReg <= 12'h400/* 1024*/;
     end else if(T30) begin
-      next_replace_tag <= T231;
+      freeSpaceReg <= T31;
     end
     if(reset) begin
-      free_space <= 12'h400/* 1024*/;
-    end else if(T33) begin
-      free_space <= T34;
+      mcacheSizeVec_0 <= 11'h0/* 0*/;
+    end else if(T39) begin
+      mcacheSizeVec_0 <= T55;
     end
     if(reset) begin
-      mcache_size_vec_0 <= 11'h0/* 0*/;
-    end else if(T42) begin
-      mcache_size_vec_0 <= T58;
+      nextIndexReg <= 4'h0/* 0*/;
+    end else if(io_mcache_ctrlrepl_wTag) begin
+      nextIndexReg <= T50;
     end
     if(reset) begin
-      next_index_tag <= 4'h0/* 0*/;
-    end else if(io_mcache_ctrlrepl_w_tag) begin
-      next_index_tag <= T53;
+      mcacheSizeVec_1 <= 11'h0/* 0*/;
+    end else if(T58) begin
+      mcacheSizeVec_1 <= T63;
     end
     if(reset) begin
-      mcache_size_vec_1 <= 11'h0/* 0*/;
-    end else if(T61) begin
-      mcache_size_vec_1 <= T66;
+      mcacheSizeVec_2 <= 11'h0/* 0*/;
+    end else if(T67) begin
+      mcacheSizeVec_2 <= T72;
     end
     if(reset) begin
-      mcache_size_vec_2 <= 11'h0/* 0*/;
-    end else if(T70) begin
-      mcache_size_vec_2 <= T75;
+      mcacheSizeVec_3 <= 11'h0/* 0*/;
+    end else if(T74) begin
+      mcacheSizeVec_3 <= T79;
     end
     if(reset) begin
-      mcache_size_vec_3 <= 11'h0/* 0*/;
-    end else if(T77) begin
-      mcache_size_vec_3 <= T82;
+      mcacheSizeVec_4 <= 11'h0/* 0*/;
+    end else if(T85) begin
+      mcacheSizeVec_4 <= T90;
     end
     if(reset) begin
-      mcache_size_vec_4 <= 11'h0/* 0*/;
-    end else if(T88) begin
-      mcache_size_vec_4 <= T93;
+      mcacheSizeVec_5 <= 11'h0/* 0*/;
+    end else if(T92) begin
+      mcacheSizeVec_5 <= T97;
     end
     if(reset) begin
-      mcache_size_vec_5 <= 11'h0/* 0*/;
-    end else if(T95) begin
-      mcache_size_vec_5 <= T100;
+      mcacheSizeVec_6 <= 11'h0/* 0*/;
+    end else if(T101) begin
+      mcacheSizeVec_6 <= T106;
     end
     if(reset) begin
-      mcache_size_vec_6 <= 11'h0/* 0*/;
-    end else if(T104) begin
-      mcache_size_vec_6 <= T109;
+      mcacheSizeVec_7 <= 11'h0/* 0*/;
+    end else if(T108) begin
+      mcacheSizeVec_7 <= T113;
     end
     if(reset) begin
-      mcache_size_vec_7 <= 11'h0/* 0*/;
-    end else if(T111) begin
-      mcache_size_vec_7 <= T116;
+      mcacheSizeVec_8 <= 11'h0/* 0*/;
+    end else if(T121) begin
+      mcacheSizeVec_8 <= T126;
     end
     if(reset) begin
-      mcache_size_vec_8 <= 11'h0/* 0*/;
-    end else if(T124) begin
-      mcache_size_vec_8 <= T129;
+      mcacheSizeVec_9 <= 11'h0/* 0*/;
+    end else if(T128) begin
+      mcacheSizeVec_9 <= T133;
     end
     if(reset) begin
-      mcache_size_vec_9 <= 11'h0/* 0*/;
-    end else if(T131) begin
-      mcache_size_vec_9 <= T136;
+      mcacheSizeVec_10 <= 11'h0/* 0*/;
+    end else if(T137) begin
+      mcacheSizeVec_10 <= T142;
     end
     if(reset) begin
-      mcache_size_vec_10 <= 11'h0/* 0*/;
-    end else if(T140) begin
-      mcache_size_vec_10 <= T145;
+      mcacheSizeVec_11 <= 11'h0/* 0*/;
+    end else if(T144) begin
+      mcacheSizeVec_11 <= T149;
     end
     if(reset) begin
-      mcache_size_vec_11 <= 11'h0/* 0*/;
-    end else if(T147) begin
-      mcache_size_vec_11 <= T152;
+      mcacheSizeVec_12 <= 11'h0/* 0*/;
+    end else if(T155) begin
+      mcacheSizeVec_12 <= T160;
     end
     if(reset) begin
-      mcache_size_vec_12 <= 11'h0/* 0*/;
-    end else if(T158) begin
-      mcache_size_vec_12 <= T163;
+      mcacheSizeVec_13 <= 11'h0/* 0*/;
+    end else if(T162) begin
+      mcacheSizeVec_13 <= T167;
     end
     if(reset) begin
-      mcache_size_vec_13 <= 11'h0/* 0*/;
-    end else if(T165) begin
-      mcache_size_vec_13 <= T170;
+      mcacheSizeVec_14 <= 11'h0/* 0*/;
+    end else if(T171) begin
+      mcacheSizeVec_14 <= T176;
     end
     if(reset) begin
-      mcache_size_vec_14 <= 11'h0/* 0*/;
-    end else if(T174) begin
-      mcache_size_vec_14 <= T179;
+      mcacheSizeVec_15 <= 11'h0/* 0*/;
+    end else if(T178) begin
+      mcacheSizeVec_15 <= T183;
     end
     if(reset) begin
-      mcache_size_vec_15 <= 11'h0/* 0*/;
-    end else if(T181) begin
-      mcache_size_vec_15 <= T186;
+      mcacheAddrVec_0 <= 32'h0/* 0*/;
+    end else if(T241) begin
+      mcacheAddrVec_0 <= io_mcache_ctrlrepl_wAddr;
     end
     if(reset) begin
-      mcache_addr_vec_0 <= 32'h0/* 0*/;
-    end else if(T244) begin
-      mcache_addr_vec_0 <= io_mcache_ctrlrepl_w_addr;
+      mcacheValidVec_1 <= 1'h0/* 0*/;
+    end else if(T253) begin
+      mcacheValidVec_1 <= T258;
     end
     if(reset) begin
-      mcache_valid_vec_1 <= 1'h0/* 0*/;
-    end else if(T256) begin
-      mcache_valid_vec_1 <= T261;
+      mcacheAddrVec_1 <= 32'h0/* 0*/;
+    end else if(T260) begin
+      mcacheAddrVec_1 <= io_mcache_ctrlrepl_wAddr;
     end
     if(reset) begin
-      mcache_addr_vec_1 <= 32'h0/* 0*/;
-    end else if(T263) begin
-      mcache_addr_vec_1 <= io_mcache_ctrlrepl_w_addr;
+      mcacheValidVec_2 <= 1'h0/* 0*/;
+    end else if(T264) begin
+      mcacheValidVec_2 <= T269;
     end
     if(reset) begin
-      mcache_valid_vec_2 <= 1'h0/* 0*/;
-    end else if(T267) begin
-      mcache_valid_vec_2 <= T272;
+      mcacheAddrVec_2 <= 32'h0/* 0*/;
+    end else if(T271) begin
+      mcacheAddrVec_2 <= io_mcache_ctrlrepl_wAddr;
     end
     if(reset) begin
-      mcache_addr_vec_2 <= 32'h0/* 0*/;
-    end else if(T274) begin
-      mcache_addr_vec_2 <= io_mcache_ctrlrepl_w_addr;
+      mcacheValidVec_3 <= 1'h0/* 0*/;
+    end else if(T275) begin
+      mcacheValidVec_3 <= T280;
     end
     if(reset) begin
-      mcache_valid_vec_3 <= 1'h0/* 0*/;
-    end else if(T278) begin
-      mcache_valid_vec_3 <= T283;
+      mcacheAddrVec_3 <= 32'h0/* 0*/;
+    end else if(T282) begin
+      mcacheAddrVec_3 <= io_mcache_ctrlrepl_wAddr;
     end
     if(reset) begin
-      mcache_addr_vec_3 <= 32'h0/* 0*/;
-    end else if(T285) begin
-      mcache_addr_vec_3 <= io_mcache_ctrlrepl_w_addr;
+      mcacheValidVec_4 <= 1'h0/* 0*/;
+    end else if(T286) begin
+      mcacheValidVec_4 <= T291;
     end
     if(reset) begin
-      mcache_valid_vec_4 <= 1'h0/* 0*/;
-    end else if(T289) begin
-      mcache_valid_vec_4 <= T294;
+      mcacheAddrVec_4 <= 32'h0/* 0*/;
+    end else if(T293) begin
+      mcacheAddrVec_4 <= io_mcache_ctrlrepl_wAddr;
     end
     if(reset) begin
-      mcache_addr_vec_4 <= 32'h0/* 0*/;
-    end else if(T296) begin
-      mcache_addr_vec_4 <= io_mcache_ctrlrepl_w_addr;
+      mcacheValidVec_5 <= 1'h0/* 0*/;
+    end else if(T297) begin
+      mcacheValidVec_5 <= T302;
     end
     if(reset) begin
-      mcache_valid_vec_5 <= 1'h0/* 0*/;
-    end else if(T300) begin
-      mcache_valid_vec_5 <= T305;
+      mcacheAddrVec_5 <= 32'h0/* 0*/;
+    end else if(T304) begin
+      mcacheAddrVec_5 <= io_mcache_ctrlrepl_wAddr;
     end
     if(reset) begin
-      mcache_addr_vec_5 <= 32'h0/* 0*/;
-    end else if(T307) begin
-      mcache_addr_vec_5 <= io_mcache_ctrlrepl_w_addr;
+      mcacheValidVec_6 <= 1'h0/* 0*/;
+    end else if(T308) begin
+      mcacheValidVec_6 <= T313;
     end
     if(reset) begin
-      mcache_valid_vec_6 <= 1'h0/* 0*/;
-    end else if(T311) begin
-      mcache_valid_vec_6 <= T316;
+      mcacheAddrVec_6 <= 32'h0/* 0*/;
+    end else if(T315) begin
+      mcacheAddrVec_6 <= io_mcache_ctrlrepl_wAddr;
     end
     if(reset) begin
-      mcache_addr_vec_6 <= 32'h0/* 0*/;
-    end else if(T318) begin
-      mcache_addr_vec_6 <= io_mcache_ctrlrepl_w_addr;
+      mcacheValidVec_7 <= 1'h0/* 0*/;
+    end else if(T319) begin
+      mcacheValidVec_7 <= T324;
     end
     if(reset) begin
-      mcache_valid_vec_7 <= 1'h0/* 0*/;
-    end else if(T322) begin
-      mcache_valid_vec_7 <= T327;
+      mcacheAddrVec_7 <= 32'h0/* 0*/;
+    end else if(T326) begin
+      mcacheAddrVec_7 <= io_mcache_ctrlrepl_wAddr;
     end
     if(reset) begin
-      mcache_addr_vec_7 <= 32'h0/* 0*/;
-    end else if(T329) begin
-      mcache_addr_vec_7 <= io_mcache_ctrlrepl_w_addr;
+      mcacheValidVec_8 <= 1'h0/* 0*/;
+    end else if(T330) begin
+      mcacheValidVec_8 <= T335;
     end
     if(reset) begin
-      mcache_valid_vec_8 <= 1'h0/* 0*/;
-    end else if(T333) begin
-      mcache_valid_vec_8 <= T338;
+      mcacheAddrVec_8 <= 32'h0/* 0*/;
+    end else if(T337) begin
+      mcacheAddrVec_8 <= io_mcache_ctrlrepl_wAddr;
     end
     if(reset) begin
-      mcache_addr_vec_8 <= 32'h0/* 0*/;
-    end else if(T340) begin
-      mcache_addr_vec_8 <= io_mcache_ctrlrepl_w_addr;
+      mcacheValidVec_9 <= 1'h0/* 0*/;
+    end else if(T341) begin
+      mcacheValidVec_9 <= T346;
     end
     if(reset) begin
-      mcache_valid_vec_9 <= 1'h0/* 0*/;
-    end else if(T344) begin
-      mcache_valid_vec_9 <= T349;
+      mcacheAddrVec_9 <= 32'h0/* 0*/;
+    end else if(T348) begin
+      mcacheAddrVec_9 <= io_mcache_ctrlrepl_wAddr;
     end
     if(reset) begin
-      mcache_addr_vec_9 <= 32'h0/* 0*/;
-    end else if(T351) begin
-      mcache_addr_vec_9 <= io_mcache_ctrlrepl_w_addr;
+      mcacheValidVec_10 <= 1'h0/* 0*/;
+    end else if(T352) begin
+      mcacheValidVec_10 <= T357;
     end
     if(reset) begin
-      mcache_valid_vec_10 <= 1'h0/* 0*/;
-    end else if(T355) begin
-      mcache_valid_vec_10 <= T360;
+      mcacheAddrVec_10 <= 32'h0/* 0*/;
+    end else if(T359) begin
+      mcacheAddrVec_10 <= io_mcache_ctrlrepl_wAddr;
     end
     if(reset) begin
-      mcache_addr_vec_10 <= 32'h0/* 0*/;
-    end else if(T362) begin
-      mcache_addr_vec_10 <= io_mcache_ctrlrepl_w_addr;
+      mcacheValidVec_11 <= 1'h0/* 0*/;
+    end else if(T363) begin
+      mcacheValidVec_11 <= T368;
     end
     if(reset) begin
-      mcache_valid_vec_11 <= 1'h0/* 0*/;
-    end else if(T366) begin
-      mcache_valid_vec_11 <= T371;
+      mcacheAddrVec_11 <= 32'h0/* 0*/;
+    end else if(T370) begin
+      mcacheAddrVec_11 <= io_mcache_ctrlrepl_wAddr;
     end
     if(reset) begin
-      mcache_addr_vec_11 <= 32'h0/* 0*/;
-    end else if(T373) begin
-      mcache_addr_vec_11 <= io_mcache_ctrlrepl_w_addr;
+      mcacheValidVec_12 <= 1'h0/* 0*/;
+    end else if(T374) begin
+      mcacheValidVec_12 <= T379;
     end
     if(reset) begin
-      mcache_valid_vec_12 <= 1'h0/* 0*/;
-    end else if(T377) begin
-      mcache_valid_vec_12 <= T382;
+      mcacheAddrVec_12 <= 32'h0/* 0*/;
+    end else if(T381) begin
+      mcacheAddrVec_12 <= io_mcache_ctrlrepl_wAddr;
     end
     if(reset) begin
-      mcache_addr_vec_12 <= 32'h0/* 0*/;
-    end else if(T384) begin
-      mcache_addr_vec_12 <= io_mcache_ctrlrepl_w_addr;
+      mcacheValidVec_13 <= 1'h0/* 0*/;
+    end else if(T385) begin
+      mcacheValidVec_13 <= T390;
     end
     if(reset) begin
-      mcache_valid_vec_13 <= 1'h0/* 0*/;
-    end else if(T388) begin
-      mcache_valid_vec_13 <= T393;
+      mcacheAddrVec_13 <= 32'h0/* 0*/;
+    end else if(T392) begin
+      mcacheAddrVec_13 <= io_mcache_ctrlrepl_wAddr;
     end
     if(reset) begin
-      mcache_addr_vec_13 <= 32'h0/* 0*/;
-    end else if(T395) begin
-      mcache_addr_vec_13 <= io_mcache_ctrlrepl_w_addr;
+      mcacheValidVec_14 <= 1'h0/* 0*/;
+    end else if(T396) begin
+      mcacheValidVec_14 <= T401;
     end
     if(reset) begin
-      mcache_valid_vec_14 <= 1'h0/* 0*/;
-    end else if(T399) begin
-      mcache_valid_vec_14 <= T404;
+      mcacheAddrVec_14 <= 32'h0/* 0*/;
+    end else if(T403) begin
+      mcacheAddrVec_14 <= io_mcache_ctrlrepl_wAddr;
     end
     if(reset) begin
-      mcache_addr_vec_14 <= 32'h0/* 0*/;
-    end else if(T406) begin
-      mcache_addr_vec_14 <= io_mcache_ctrlrepl_w_addr;
+      mcacheValidVec_15 <= 1'h0/* 0*/;
+    end else if(T407) begin
+      mcacheValidVec_15 <= T412;
     end
     if(reset) begin
-      mcache_valid_vec_15 <= 1'h0/* 0*/;
-    end else if(T410) begin
-      mcache_valid_vec_15 <= T415;
+      mcacheAddrVec_15 <= 32'h0/* 0*/;
+    end else if(T414) begin
+      mcacheAddrVec_15 <= io_mcache_ctrlrepl_wAddr;
     end
     if(reset) begin
-      mcache_addr_vec_15 <= 32'h0/* 0*/;
-    end else if(T417) begin
-      mcache_addr_vec_15 <= io_mcache_ctrlrepl_w_addr;
+      nextPosReg <= 10'h0/* 0*/;
+    end else if(io_mcache_ctrlrepl_wTag) begin
+      nextPosReg <= T417;
     end
     if(reset) begin
-      next_replace_pos <= 10'h0/* 0*/;
-    end else if(io_mcache_ctrlrepl_w_tag) begin
-      next_replace_pos <= T420;
+      mcachePosVec_15 <= 10'h0/* 0*/;
+    end else if(T422) begin
+      mcachePosVec_15 <= nextPosReg;
     end
     if(reset) begin
-      mcache_pos_vec_15 <= 10'h0/* 0*/;
-    end else if(T425) begin
-      mcache_pos_vec_15 <= next_replace_pos;
+      mcachePosVec_14 <= 10'h0/* 0*/;
+    end else if(T430) begin
+      mcachePosVec_14 <= nextPosReg;
     end
     if(reset) begin
-      mcache_pos_vec_14 <= 10'h0/* 0*/;
-    end else if(T433) begin
-      mcache_pos_vec_14 <= next_replace_pos;
+      mcachePosVec_13 <= 10'h0/* 0*/;
+    end else if(T435) begin
+      mcachePosVec_13 <= nextPosReg;
     end
     if(reset) begin
-      mcache_pos_vec_13 <= 10'h0/* 0*/;
-    end else if(T438) begin
-      mcache_pos_vec_13 <= next_replace_pos;
+      mcachePosVec_12 <= 10'h0/* 0*/;
+    end else if(T440) begin
+      mcachePosVec_12 <= nextPosReg;
     end
     if(reset) begin
-      mcache_pos_vec_12 <= 10'h0/* 0*/;
-    end else if(T443) begin
-      mcache_pos_vec_12 <= next_replace_pos;
+      mcachePosVec_11 <= 10'h0/* 0*/;
+    end else if(T445) begin
+      mcachePosVec_11 <= nextPosReg;
     end
     if(reset) begin
-      mcache_pos_vec_11 <= 10'h0/* 0*/;
-    end else if(T448) begin
-      mcache_pos_vec_11 <= next_replace_pos;
+      mcachePosVec_10 <= 10'h0/* 0*/;
+    end else if(T450) begin
+      mcachePosVec_10 <= nextPosReg;
     end
     if(reset) begin
-      mcache_pos_vec_10 <= 10'h0/* 0*/;
-    end else if(T453) begin
-      mcache_pos_vec_10 <= next_replace_pos;
+      mcachePosVec_9 <= 10'h0/* 0*/;
+    end else if(T455) begin
+      mcachePosVec_9 <= nextPosReg;
     end
     if(reset) begin
-      mcache_pos_vec_9 <= 10'h0/* 0*/;
-    end else if(T458) begin
-      mcache_pos_vec_9 <= next_replace_pos;
+      mcachePosVec_8 <= 10'h0/* 0*/;
+    end else if(T460) begin
+      mcachePosVec_8 <= nextPosReg;
     end
     if(reset) begin
-      mcache_pos_vec_8 <= 10'h0/* 0*/;
-    end else if(T463) begin
-      mcache_pos_vec_8 <= next_replace_pos;
+      mcachePosVec_7 <= 10'h0/* 0*/;
+    end else if(T465) begin
+      mcachePosVec_7 <= nextPosReg;
     end
     if(reset) begin
-      mcache_pos_vec_7 <= 10'h0/* 0*/;
-    end else if(T468) begin
-      mcache_pos_vec_7 <= next_replace_pos;
+      mcachePosVec_6 <= 10'h0/* 0*/;
+    end else if(T470) begin
+      mcachePosVec_6 <= nextPosReg;
     end
     if(reset) begin
-      mcache_pos_vec_6 <= 10'h0/* 0*/;
-    end else if(T473) begin
-      mcache_pos_vec_6 <= next_replace_pos;
+      mcachePosVec_5 <= 10'h0/* 0*/;
+    end else if(T475) begin
+      mcachePosVec_5 <= nextPosReg;
     end
     if(reset) begin
-      mcache_pos_vec_5 <= 10'h0/* 0*/;
-    end else if(T478) begin
-      mcache_pos_vec_5 <= next_replace_pos;
+      mcachePosVec_4 <= 10'h0/* 0*/;
+    end else if(T480) begin
+      mcachePosVec_4 <= nextPosReg;
     end
     if(reset) begin
-      mcache_pos_vec_4 <= 10'h0/* 0*/;
-    end else if(T483) begin
-      mcache_pos_vec_4 <= next_replace_pos;
+      mcachePosVec_3 <= 10'h0/* 0*/;
+    end else if(T485) begin
+      mcachePosVec_3 <= nextPosReg;
     end
     if(reset) begin
-      mcache_pos_vec_3 <= 10'h0/* 0*/;
-    end else if(T488) begin
-      mcache_pos_vec_3 <= next_replace_pos;
+      mcachePosVec_2 <= 10'h0/* 0*/;
+    end else if(T490) begin
+      mcachePosVec_2 <= nextPosReg;
     end
     if(reset) begin
-      mcache_pos_vec_2 <= 10'h0/* 0*/;
-    end else if(T493) begin
-      mcache_pos_vec_2 <= next_replace_pos;
+      mcachePosVec_1 <= 10'h0/* 0*/;
+    end else if(T495) begin
+      mcachePosVec_1 <= nextPosReg;
     end
     if(reset) begin
-      mcache_pos_vec_1 <= 10'h0/* 0*/;
-    end else if(T498) begin
-      mcache_pos_vec_1 <= next_replace_pos;
-    end
-    if(reset) begin
-      mcache_pos_vec_0 <= 10'h0/* 0*/;
-    end else if(T503) begin
-      mcache_pos_vec_0 <= next_replace_pos;
+      mcachePosVec_0 <= 10'h0/* 0*/;
+    end else if(T500) begin
+      mcachePosVec_0 <= nextPosReg;
     end
     if(reset) begin
       hitReg <= 1'h1/* 1*/;
-    end else if(T509) begin
-      hitReg <= T526;
+    end else if(T505) begin
+      hitReg <= T522;
     end
     if(reset) begin
       selMCacheReg <= 1'h0/* 0*/;
-    end else if(T253) begin
-      selMCacheReg <= T543;
+    end else if(T250) begin
+      selMCacheReg <= T539;
     end
     if(reset) begin
       selIspmReg <= 1'h0/* 0*/;
-    end else if(T253) begin
-      selIspmReg <= T546;
+    end else if(T250) begin
+      selIspmReg <= T542;
     end
     if(reset) begin
       callRetBaseReg <= 32'h1/* 1*/;
-    end else if(T253) begin
+    end else if(T250) begin
       callRetBaseReg <= io_exmcache_callRetBase;
     end
     if(reset) begin
       callAddrReg <= 32'h1/* 1*/;
-    end else if(T253) begin
+    end else if(T250) begin
       callAddrReg <= io_exmcache_callRetAddr;
     end
-    addr_parity_reg <= rd_parity;
     if(reset) begin
-      instr_bReg <= 32'h0/* 0*/;
-    end else if(T562) begin
-      instr_bReg <= io_mcachefe_instr_b;
+      instrOddReg <= 32'h0/* 0*/;
+    end else if(T558) begin
+      instrOddReg <= io_mcachefe_instrOdd;
     end
     if(reset) begin
-      instr_aReg <= 32'h0/* 0*/;
-    end else if(T562) begin
-      instr_aReg <= io_mcachefe_instr_a;
+      instrEvenReg <= 32'h0/* 0*/;
+    end else if(T558) begin
+      instrEvenReg <= io_mcachefe_instrEven;
     end
   end
 endmodule
 
-module MCacheMem(input clk,
-    input  io_mcachemem_in_w_even,
-    input  io_mcachemem_in_w_odd,
-    input [31:0] io_mcachemem_in_w_data,
-    input [8:0] io_mcachemem_in_w_addr,
-    input [8:0] io_mcachemem_in_addr_even,
-    input [8:0] io_mcachemem_in_addr_odd,
-    output[31:0] io_mcachemem_out_instr_even,
-    output[31:0] io_mcachemem_out_instr_odd
+module MemBlock_0(input clk,
+    input [8:0] io_rdAddr,
+    output[31:0] io_rdData,
+    input [8:0] io_wrAddr,
+    input  io_wrEna,
+    input [31:0] io_wrData
 );
 
   wire[31:0] T0;
-  reg [31:0] ram_mcache_odd [511:0];
+  reg [31:0] mem [511:0];
   wire[31:0] T1;
   wire[31:0] T2;
-  reg[8:0] addrOddReg;
-  wire[31:0] T3;
-  reg [31:0] ram_mcache_even [511:0];
-  wire[31:0] T4;
-  wire[31:0] T5;
-  reg[8:0] addrEvenReg;
+  wire T3;
+  reg[8:0] R4;
 
-  assign io_mcachemem_out_instr_odd = T0;
-  assign T0 = ram_mcache_odd[addrOddReg];
-  assign T2 = io_mcachemem_in_w_data;
-  assign io_mcachemem_out_instr_even = T3;
-  assign T3 = ram_mcache_even[addrEvenReg];
-  assign T5 = io_mcachemem_in_w_data;
+  assign io_rdData = T0;
+  assign T0 = mem[R4];
+  assign T2 = io_wrData;
+  assign T3 = io_wrEna == 1'h1/* 1*/;
 
   always @(posedge clk) begin
-    if (io_mcachemem_in_w_odd)
-      ram_mcache_odd[io_mcachemem_in_w_addr] <= T2;
-    addrOddReg <= io_mcachemem_in_addr_odd;
-    if (io_mcachemem_in_w_even)
-      ram_mcache_even[io_mcachemem_in_w_addr] <= T5;
-    addrEvenReg <= io_mcachemem_in_addr_even;
+    if (T3)
+      mem[io_wrAddr] <= T2;
+    R4 <= io_rdAddr;
   end
+endmodule
+
+module MCacheMem(input clk,
+    input  io_mcachemem_in_wEven,
+    input  io_mcachemem_in_wOdd,
+    input [31:0] io_mcachemem_in_wData,
+    input [8:0] io_mcachemem_in_wAddr,
+    input [8:0] io_mcachemem_in_addrEven,
+    input [8:0] io_mcachemem_in_addrOdd,
+    output[31:0] io_mcachemem_out_instrEven,
+    output[31:0] io_mcachemem_out_instrOdd
+);
+
+  wire[31:0] mcacheOdd_io_rdData;
+  wire[31:0] mcacheEven_io_rdData;
+
+  assign io_mcachemem_out_instrOdd = mcacheOdd_io_rdData;
+  assign io_mcachemem_out_instrEven = mcacheEven_io_rdData;
+  MemBlock_0 mcacheEven(.clk(clk),
+       .io_rdAddr( io_mcachemem_in_addrEven ),
+       .io_rdData( mcacheEven_io_rdData ),
+       .io_wrAddr( io_mcachemem_in_wAddr ),
+       .io_wrEna( io_mcachemem_in_wEven ),
+       .io_wrData( io_mcachemem_in_wData )
+  );
+  MemBlock_0 mcacheOdd(.clk(clk),
+       .io_rdAddr( io_mcachemem_in_addrOdd ),
+       .io_rdData( mcacheOdd_io_rdData ),
+       .io_wrAddr( io_mcachemem_in_wAddr ),
+       .io_wrEna( io_mcachemem_in_wOdd ),
+       .io_wrData( io_mcachemem_in_wData )
+  );
 endmodule
 
 module MCache(input clk, input reset,
     output io_ena_out,
     input  io_ena_in,
-    input [31:0] io_femcache_address,
-    input  io_femcache_request,
-    input  io_femcache_doCallRet,
-    input [31:0] io_femcache_callRetBase,
+    input [31:0] io_femcache_addrEven,
+    input [31:0] io_femcache_addrOdd,
     input  io_exmcache_doCallRet,
     input [31:0] io_exmcache_callRetBase,
     input [31:0] io_exmcache_callRetAddr,
-    output[31:0] io_mcachefe_instr_a,
-    output[31:0] io_mcachefe_instr_b,
+    output[31:0] io_mcachefe_instrEven,
+    output[31:0] io_mcachefe_instrOdd,
     output[10:0] io_mcachefe_relBase,
     output[11:0] io_mcachefe_relPc,
     output[31:0] io_mcachefe_reloc,
-    output[1:0] io_mcachefe_mem_sel,
+    output[1:0] io_mcachefe_memSel,
     output[2:0] io_ocp_port_M_Cmd,
     output[31:0] io_ocp_port_M_Addr,
     output[31:0] io_ocp_port_M_Data,
@@ -2056,35 +2090,35 @@ module MCache(input clk, input reset,
     input  io_ocp_port_S_DataAccept
 );
 
-  wire[8:0] mcacherepl_io_mcachemem_in_addr_odd;
-  wire[8:0] mcacherepl_io_mcachemem_in_addr_even;
-  wire[8:0] mcacherepl_io_mcachemem_in_w_addr;
-  wire[31:0] mcacherepl_io_mcachemem_in_w_data;
-  wire mcacherepl_io_mcachemem_in_w_odd;
-  wire mcacherepl_io_mcachemem_in_w_even;
-  wire[31:0] mcachemem_io_mcachemem_out_instr_odd;
-  wire[31:0] mcachemem_io_mcachemem_out_instr_even;
-  wire mcachectrl_io_mcache_ctrlrepl_instr_stall;
-  wire[9:0] mcachectrl_io_mcache_ctrlrepl_address;
-  wire mcachectrl_io_mcache_ctrlrepl_w_tag;
-  wire[31:0] mcachectrl_io_mcache_ctrlrepl_w_addr;
-  wire[31:0] mcachectrl_io_mcache_ctrlrepl_w_data;
-  wire mcachectrl_io_mcache_ctrlrepl_w_enable;
-  wire[10:0] mcacherepl_io_mcache_replctrl_pos_offset;
+  wire[8:0] mcacherepl_io_mcachemem_in_addrOdd;
+  wire[8:0] mcacherepl_io_mcachemem_in_addrEven;
+  wire[8:0] mcacherepl_io_mcachemem_in_wAddr;
+  wire[31:0] mcacherepl_io_mcachemem_in_wData;
+  wire mcacherepl_io_mcachemem_in_wOdd;
+  wire mcacherepl_io_mcachemem_in_wEven;
+  wire[31:0] mcachemem_io_mcachemem_out_instrOdd;
+  wire[31:0] mcachemem_io_mcachemem_out_instrEven;
+  wire mcachectrl_io_mcache_ctrlrepl_instrStall;
+  wire[9:0] mcachectrl_io_mcache_ctrlrepl_addrOdd;
+  wire[9:0] mcachectrl_io_mcache_ctrlrepl_addrEven;
+  wire mcachectrl_io_mcache_ctrlrepl_wTag;
+  wire[31:0] mcachectrl_io_mcache_ctrlrepl_wAddr;
+  wire[31:0] mcachectrl_io_mcache_ctrlrepl_wData;
+  wire mcachectrl_io_mcache_ctrlrepl_wEna;
   wire mcacherepl_io_mcache_replctrl_hit;
   wire[3:0] mcachectrl_io_ocp_port_M_DataByteEn;
   wire mcachectrl_io_ocp_port_M_DataValid;
   wire[31:0] mcachectrl_io_ocp_port_M_Data;
   wire[31:0] mcachectrl_io_ocp_port_M_Addr;
   wire[2:0] mcachectrl_io_ocp_port_M_Cmd;
-  wire[1:0] mcacherepl_io_mcachefe_mem_sel;
+  wire[1:0] mcacherepl_io_mcachefe_memSel;
   wire[31:0] mcacherepl_io_mcachefe_reloc;
   wire[11:0] mcacherepl_io_mcachefe_relPc;
   wire[10:0] mcacherepl_io_mcachefe_relBase;
-  wire[31:0] mcacherepl_io_mcachefe_instr_b;
-  wire[31:0] mcacherepl_io_mcachefe_instr_a;
+  wire[31:0] mcacherepl_io_mcachefe_instrOdd;
+  wire[31:0] mcacherepl_io_mcachefe_instrEven;
   wire T0;
-  wire mcacherepl_io_hit_ena;
+  wire mcacherepl_io_hitEna;
   wire mcachectrl_io_fetch_ena;
 
   assign io_ocp_port_M_DataByteEn = mcachectrl_io_ocp_port_M_DataByteEn;
@@ -2092,29 +2126,27 @@ module MCache(input clk, input reset,
   assign io_ocp_port_M_Data = mcachectrl_io_ocp_port_M_Data;
   assign io_ocp_port_M_Addr = mcachectrl_io_ocp_port_M_Addr;
   assign io_ocp_port_M_Cmd = mcachectrl_io_ocp_port_M_Cmd;
-  assign io_mcachefe_mem_sel = mcacherepl_io_mcachefe_mem_sel;
+  assign io_mcachefe_memSel = mcacherepl_io_mcachefe_memSel;
   assign io_mcachefe_reloc = mcacherepl_io_mcachefe_reloc;
   assign io_mcachefe_relPc = mcacherepl_io_mcachefe_relPc;
   assign io_mcachefe_relBase = mcacherepl_io_mcachefe_relBase;
-  assign io_mcachefe_instr_b = mcacherepl_io_mcachefe_instr_b;
-  assign io_mcachefe_instr_a = mcacherepl_io_mcachefe_instr_a;
+  assign io_mcachefe_instrOdd = mcacherepl_io_mcachefe_instrOdd;
+  assign io_mcachefe_instrEven = mcacherepl_io_mcachefe_instrEven;
   assign io_ena_out = T0;
-  assign T0 = mcachectrl_io_fetch_ena & mcacherepl_io_hit_ena;
+  assign T0 = mcachectrl_io_fetch_ena & mcacherepl_io_hitEna;
   MCacheCtrl mcachectrl(.clk(clk), .reset(reset),
        .io_ena_in( io_ena_in ),
        .io_fetch_ena( mcachectrl_io_fetch_ena ),
-       .io_mcache_ctrlrepl_w_enable( mcachectrl_io_mcache_ctrlrepl_w_enable ),
-       .io_mcache_ctrlrepl_w_data( mcachectrl_io_mcache_ctrlrepl_w_data ),
-       .io_mcache_ctrlrepl_w_addr( mcachectrl_io_mcache_ctrlrepl_w_addr ),
-       .io_mcache_ctrlrepl_w_tag( mcachectrl_io_mcache_ctrlrepl_w_tag ),
-       .io_mcache_ctrlrepl_address( mcachectrl_io_mcache_ctrlrepl_address ),
-       .io_mcache_ctrlrepl_instr_stall( mcachectrl_io_mcache_ctrlrepl_instr_stall ),
+       .io_mcache_ctrlrepl_wEna( mcachectrl_io_mcache_ctrlrepl_wEna ),
+       .io_mcache_ctrlrepl_wData( mcachectrl_io_mcache_ctrlrepl_wData ),
+       .io_mcache_ctrlrepl_wAddr( mcachectrl_io_mcache_ctrlrepl_wAddr ),
+       .io_mcache_ctrlrepl_wTag( mcachectrl_io_mcache_ctrlrepl_wTag ),
+       .io_mcache_ctrlrepl_addrEven( mcachectrl_io_mcache_ctrlrepl_addrEven ),
+       .io_mcache_ctrlrepl_addrOdd( mcachectrl_io_mcache_ctrlrepl_addrOdd ),
+       .io_mcache_ctrlrepl_instrStall( mcachectrl_io_mcache_ctrlrepl_instrStall ),
        .io_mcache_replctrl_hit( mcacherepl_io_mcache_replctrl_hit ),
-       .io_mcache_replctrl_pos_offset( mcacherepl_io_mcache_replctrl_pos_offset ),
-       .io_femcache_address( io_femcache_address ),
-       .io_femcache_request( io_femcache_request ),
-       .io_femcache_doCallRet( io_femcache_doCallRet ),
-       .io_femcache_callRetBase( io_femcache_callRetBase ),
+       .io_femcache_addrEven( io_femcache_addrEven ),
+       .io_femcache_addrOdd( io_femcache_addrOdd ),
        .io_exmcache_doCallRet( io_exmcache_doCallRet ),
        .io_exmcache_callRetBase( io_exmcache_callRetBase ),
        .io_exmcache_callRetAddr( io_exmcache_callRetAddr ),
@@ -2130,43 +2162,70 @@ module MCache(input clk, input reset,
   );
   MCacheReplFifo mcacherepl(.clk(clk), .reset(reset),
        .io_ena_in( io_ena_in ),
-       .io_hit_ena( mcacherepl_io_hit_ena ),
+       .io_hitEna( mcacherepl_io_hitEna ),
        .io_exmcache_doCallRet( io_exmcache_doCallRet ),
        .io_exmcache_callRetBase( io_exmcache_callRetBase ),
        .io_exmcache_callRetAddr( io_exmcache_callRetAddr ),
-       .io_mcachefe_instr_a( mcacherepl_io_mcachefe_instr_a ),
-       .io_mcachefe_instr_b( mcacherepl_io_mcachefe_instr_b ),
+       .io_mcachefe_instrEven( mcacherepl_io_mcachefe_instrEven ),
+       .io_mcachefe_instrOdd( mcacherepl_io_mcachefe_instrOdd ),
        .io_mcachefe_relBase( mcacherepl_io_mcachefe_relBase ),
        .io_mcachefe_relPc( mcacherepl_io_mcachefe_relPc ),
        .io_mcachefe_reloc( mcacherepl_io_mcachefe_reloc ),
-       .io_mcachefe_mem_sel( mcacherepl_io_mcachefe_mem_sel ),
-       .io_mcache_ctrlrepl_w_enable( mcachectrl_io_mcache_ctrlrepl_w_enable ),
-       .io_mcache_ctrlrepl_w_data( mcachectrl_io_mcache_ctrlrepl_w_data ),
-       .io_mcache_ctrlrepl_w_addr( mcachectrl_io_mcache_ctrlrepl_w_addr ),
-       .io_mcache_ctrlrepl_w_tag( mcachectrl_io_mcache_ctrlrepl_w_tag ),
-       .io_mcache_ctrlrepl_address( mcachectrl_io_mcache_ctrlrepl_address ),
-       .io_mcache_ctrlrepl_instr_stall( mcachectrl_io_mcache_ctrlrepl_instr_stall ),
+       .io_mcachefe_memSel( mcacherepl_io_mcachefe_memSel ),
+       .io_mcache_ctrlrepl_wEna( mcachectrl_io_mcache_ctrlrepl_wEna ),
+       .io_mcache_ctrlrepl_wData( mcachectrl_io_mcache_ctrlrepl_wData ),
+       .io_mcache_ctrlrepl_wAddr( mcachectrl_io_mcache_ctrlrepl_wAddr ),
+       .io_mcache_ctrlrepl_wTag( mcachectrl_io_mcache_ctrlrepl_wTag ),
+       .io_mcache_ctrlrepl_addrEven( mcachectrl_io_mcache_ctrlrepl_addrEven ),
+       .io_mcache_ctrlrepl_addrOdd( mcachectrl_io_mcache_ctrlrepl_addrOdd ),
+       .io_mcache_ctrlrepl_instrStall( mcachectrl_io_mcache_ctrlrepl_instrStall ),
        .io_mcache_replctrl_hit( mcacherepl_io_mcache_replctrl_hit ),
-       .io_mcache_replctrl_pos_offset( mcacherepl_io_mcache_replctrl_pos_offset ),
-       .io_mcachemem_in_w_even( mcacherepl_io_mcachemem_in_w_even ),
-       .io_mcachemem_in_w_odd( mcacherepl_io_mcachemem_in_w_odd ),
-       .io_mcachemem_in_w_data( mcacherepl_io_mcachemem_in_w_data ),
-       .io_mcachemem_in_w_addr( mcacherepl_io_mcachemem_in_w_addr ),
-       .io_mcachemem_in_addr_even( mcacherepl_io_mcachemem_in_addr_even ),
-       .io_mcachemem_in_addr_odd( mcacherepl_io_mcachemem_in_addr_odd ),
-       .io_mcachemem_out_instr_even( mcachemem_io_mcachemem_out_instr_even ),
-       .io_mcachemem_out_instr_odd( mcachemem_io_mcachemem_out_instr_odd )
+       .io_mcachemem_in_wEven( mcacherepl_io_mcachemem_in_wEven ),
+       .io_mcachemem_in_wOdd( mcacherepl_io_mcachemem_in_wOdd ),
+       .io_mcachemem_in_wData( mcacherepl_io_mcachemem_in_wData ),
+       .io_mcachemem_in_wAddr( mcacherepl_io_mcachemem_in_wAddr ),
+       .io_mcachemem_in_addrEven( mcacherepl_io_mcachemem_in_addrEven ),
+       .io_mcachemem_in_addrOdd( mcacherepl_io_mcachemem_in_addrOdd ),
+       .instrEven( mcachemem_io_mcachemem_out_instrEven ),
+       .instrOdd( mcachemem_io_mcachemem_out_instrOdd )
   );
   MCacheMem mcachemem(.clk(clk),
-       .io_mcachemem_in_w_even( mcacherepl_io_mcachemem_in_w_even ),
-       .io_mcachemem_in_w_odd( mcacherepl_io_mcachemem_in_w_odd ),
-       .io_mcachemem_in_w_data( mcacherepl_io_mcachemem_in_w_data ),
-       .io_mcachemem_in_w_addr( mcacherepl_io_mcachemem_in_w_addr ),
-       .io_mcachemem_in_addr_even( mcacherepl_io_mcachemem_in_addr_even ),
-       .io_mcachemem_in_addr_odd( mcacherepl_io_mcachemem_in_addr_odd ),
-       .io_mcachemem_out_instr_even( mcachemem_io_mcachemem_out_instr_even ),
-       .io_mcachemem_out_instr_odd( mcachemem_io_mcachemem_out_instr_odd )
+       .io_mcachemem_in_wEven( mcacherepl_io_mcachemem_in_wEven ),
+       .io_mcachemem_in_wOdd( mcacherepl_io_mcachemem_in_wOdd ),
+       .io_mcachemem_in_wData( mcacherepl_io_mcachemem_in_wData ),
+       .io_mcachemem_in_wAddr( mcacherepl_io_mcachemem_in_wAddr ),
+       .io_mcachemem_in_addrEven( mcacherepl_io_mcachemem_in_addrEven ),
+       .io_mcachemem_in_addrOdd( mcacherepl_io_mcachemem_in_addrOdd ),
+       .io_mcachemem_out_instrEven( mcachemem_io_mcachemem_out_instrEven ),
+       .io_mcachemem_out_instrOdd( mcachemem_io_mcachemem_out_instrOdd )
   );
+endmodule
+
+module MemBlock_1(input clk,
+    input [9:0] io_rdAddr,
+    output[31:0] io_rdData,
+    input [9:0] io_wrAddr,
+    input  io_wrEna,
+    input [31:0] io_wrData
+);
+
+  wire[31:0] T0;
+  reg [31:0] mem [1023:0];
+  wire[31:0] T1;
+  wire[31:0] T2;
+  wire T3;
+  reg[9:0] R4;
+
+  assign io_rdData = T0;
+  assign T0 = mem[R4];
+  assign T2 = io_wrData;
+  assign T3 = io_wrEna == 1'h1/* 1*/;
+
+  always @(posedge clk) begin
+    if (T3)
+      mem[io_wrAddr] <= T2;
+    R4 <= io_rdAddr;
+  end
 endmodule
 
 module Fetch(input clk, input reset,
@@ -2184,264 +2243,356 @@ module Fetch(input clk, input reset,
     input  io_memfe_store,
     input [31:0] io_memfe_addr,
     input [31:0] io_memfe_data,
-    output[31:0] io_femcache_address,
-    output io_femcache_request,
-    output io_femcache_doCallRet,
-    output[31:0] io_femcache_callRetBase,
-    input [31:0] io_mcachefe_instr_a,
-    input [31:0] io_mcachefe_instr_b,
+    output[31:0] io_femcache_addrEven,
+    output[31:0] io_femcache_addrOdd,
+    input [31:0] io_mcachefe_instrEven,
+    input [31:0] io_mcachefe_instrOdd,
     input [10:0] io_mcachefe_relBase,
     input [11:0] io_mcachefe_relPc,
     input [31:0] io_mcachefe_reloc,
-    input [1:0] io_mcachefe_mem_sel
+    input [1:0] io_mcachefe_memSel
 );
 
-  wire[31:0] T0;
-  reg[0:0] selMCache;
+  wire wrOdd;
+  wire T0;
   wire T1;
-  wire[31:0] T2;
-  wire[29:0] T3;
-  reg[29:0] pcReg;
-  wire T4;
-  wire T5;
-  wire[29:0] pc_next;
-  wire[29:0] T6;
-  wire[29:0] pc_cont;
+  wire selWrite;
+  wire T2;
+  wire[15:0] T3;
+  wire[15:0] T4;
+  wire[9:0] T5;
+  wire[9:0] T6;
+  wire[29:0] addrOdd;
   wire[29:0] T7;
+  reg[29:0] addrOddReg;
   wire[29:0] T8;
   wire[29:0] T9;
-  wire[29:0] T10;
-  wire b_valid;
-  wire T11;
-  wire[31:0] instr_a;
-  wire[31:0] T12;
-  wire[31:0] instr_a_rom;
-  reg[31:0] data_odd;
-  wire[31:0] T13;
-  reg [31:0] romOdd [6:0];
-  wire[2:0] T14;
-  wire[29:0] addrOdd;
-  wire[29:0] T15;
-  reg[29:0] addrOddReg;
+  wire[28:0] T10;
+  wire[29:0] pc_next;
+  wire[29:0] T11;
+  wire[29:0] pc_cont;
+  wire[29:0] T12;
+  wire[29:0] T13;
+  reg[29:0] pcReg;
+  wire T14;
+  wire T15;
   wire[29:0] T16;
   wire[29:0] T17;
-  wire[28:0] T18;
-  reg[31:0] data_even;
+  wire b_valid;
+  wire T18;
+  wire[31:0] instr_a;
   wire[31:0] T19;
-  reg [31:0] romEven [6:0];
-  wire[2:0] T20;
+  wire[31:0] instr_a_rom;
+  reg[31:0] data_odd;
+  wire[31:0] T20;
+  reg [31:0] romOdd [48:0];
+  wire[5:0] T21;
+  reg[31:0] data_even;
+  wire[31:0] T22;
+  reg [31:0] romEven [48:0];
+  wire[5:0] T23;
   wire[29:0] addrEven;
-  wire[29:0] T21;
+  wire[29:0] T24;
   reg[29:0] addrEvenReg;
-  wire[29:0] T22;
-  wire[29:0] T23;
-  wire[28:0] T24;
+  wire[29:0] T25;
+  wire[29:0] T26;
+  wire[28:0] T27;
   wire[29:0] pc_inc;
   wire[29:0] pc_next2;
-  wire[29:0] T25;
-  wire[29:0] pc_cont2;
-  wire[29:0] T26;
-  wire[29:0] T27;
   wire[29:0] T28;
+  wire[29:0] pc_cont2;
   wire[29:0] T29;
   wire[29:0] T30;
   wire[29:0] T31;
   wire[29:0] T32;
-  wire[11:0] T33;
-  wire[11:0] T34;
-  wire[11:0] T35;
-  wire T36;
-  wire T37;
-  wire T38;
-  wire[31:0] instr_a_ispm;
-  wire[31:0] T39;
-  reg [31:0] memOdd [1023:0];
-  wire[31:0] T40;
-  wire[31:0] T41;
-  reg[31:0] dataReg;
-  reg[0:0] wrOddReg;
+  wire[29:0] T33;
+  wire[29:0] T34;
+  wire[29:0] T35;
+  wire[11:0] T36;
+  wire[11:0] T37;
+  wire[11:0] T38;
+  wire T39;
+  wire T40;
+  wire T41;
+  wire[31:0] instr_a_cache;
   wire T42;
   wire T43;
+  reg[0:0] selMCache;
   wire T44;
-  wire selWrite;
+  wire[31:0] instr_a_ispm;
+  wire[31:0] memOdd_io_rdData;
+  wire[31:0] memEven_io_rdData;
   wire T45;
-  wire[15:0] T46;
-  wire[15:0] T47;
-  wire[9:0] T48;
-  reg[31:0] addrReg;
-  wire[9:0] T49;
-  wire[31:0] T50;
-  reg [31:0] memEven [1023:0];
-  wire[31:0] T51;
-  wire[31:0] T52;
-  reg[0:0] wrEvenReg;
-  wire T53;
-  wire T54;
-  wire T55;
-  wire[9:0] T56;
-  wire[9:0] T57;
-  wire T58;
-  wire T59;
+  wire T46;
   reg[0:0] selIspm;
-  wire T60;
-  wire[29:0] T61;
-  wire[11:0] T62;
-  wire[10:0] T63;
-  wire[29:0] T64;
-  wire[29:0] T65;
+  wire T47;
+  wire[29:0] T48;
+  wire[11:0] T49;
+  wire wrEven;
+  wire T50;
+  wire T51;
+  wire[9:0] T52;
+  wire[9:0] T53;
+  wire[31:0] T54;
+  wire[31:0] T55;
+  wire[10:0] T56;
+  wire[29:0] T57;
+  wire[29:0] T58;
+  wire[29:0] T59;
+  wire[29:0] relPc;
+  wire[29:0] T60;
   reg[10:0] relBaseReg;
-  wire T66;
+  wire T61;
+  wire[29:0] T62;
+  wire[29:0] T63;
   reg[31:0] relocReg;
   wire[31:0] instr_b;
-  wire[31:0] T67;
+  wire[31:0] T64;
   wire[31:0] instr_b_rom;
+  wire T65;
+  wire T66;
+  wire[31:0] instr_b_cache;
+  wire T67;
   wire T68;
-  wire T69;
   wire[31:0] instr_b_ispm;
+  wire T69;
   wire T70;
-  wire T71;
 
-  assign io_femcache_callRetBase = T0;
-  assign T0 = {2'h0/* 0*/, io_memfe_callRetBase};
-  assign io_femcache_doCallRet = io_memfe_doCallRet;
-  assign io_femcache_request = selMCache;
-  assign T1 = io_mcachefe_mem_sel[1'h0/* 0*/:1'h0/* 0*/];
-  assign io_femcache_address = T2;
-  assign T2 = {2'h0/* 0*/, T3};
-  assign T3 = io_ena ? pc_next : pcReg;
-  assign T4 = io_ena && T5;
-  assign T5 = ! reset;
-  assign pc_next = io_memfe_doCallRet ? T61 : T6;
-  assign T6 = io_exfe_doBranch ? io_exfe_branchPc : pc_cont;
-  assign pc_cont = b_valid ? T9 : T7;
-  assign T7 = pcReg + T8;
-  assign T8 = {29'h0/* 0*/, 1'h1/* 1*/};
-  assign T9 = pcReg + T10;
-  assign T10 = {28'h0/* 0*/, 2'h2/* 2*/};
-  assign b_valid = T11 == 1'h1/* 1*/;
-  assign T11 = instr_a[5'h1f/* 31*/:5'h1f/* 31*/];
-  assign instr_a = selIspm ? instr_a_ispm : T12;
-  assign T12 = selMCache ? io_mcachefe_instr_a : instr_a_rom;
-  assign instr_a_rom = T37 ? data_even : data_odd;
-  assign T13 = romOdd[T14];
+  assign wrOdd = selWrite & T0;
+  assign T0 = T1 == 1'h1/* 1*/;
+  assign T1 = io_memfe_addr[2'h2/* 2*/:2'h2/* 2*/];
+  assign selWrite = io_memfe_store & T2;
+  assign T2 = T4 == T3;
+  assign T3 = {15'h0/* 0*/, 1'h1/* 1*/};
+  assign T4 = io_memfe_addr[5'h1f/* 31*/:5'h10/* 16*/];
+  assign T5 = io_memfe_addr[4'h9/* 9*/:1'h0/* 0*/];
+  assign T6 = addrOdd[4'ha/* 10*/:1'h1/* 1*/];
+  assign addrOdd = T7;
+  assign T7 = T14 ? T8 : addrOddReg;
+  assign T8 = T9;
+  assign T9 = {T10, 1'h1/* 1*/};
+  assign T10 = pc_next[5'h1d/* 29*/:1'h1/* 1*/];
+  assign pc_next = io_memfe_doCallRet ? T48 : T11;
+  assign T11 = io_exfe_doBranch ? io_exfe_branchPc : pc_cont;
+  assign pc_cont = b_valid ? T16 : T12;
+  assign T12 = pcReg + T13;
+  assign T13 = {29'h0/* 0*/, 1'h1/* 1*/};
+  assign T14 = io_ena && T15;
+  assign T15 = ! reset;
+  assign T16 = pcReg + T17;
+  assign T17 = {28'h0/* 0*/, 2'h2/* 2*/};
+  assign b_valid = T18 == 1'h1/* 1*/;
+  assign T18 = instr_a[5'h1f/* 31*/:5'h1f/* 31*/];
+  assign instr_a = selIspm ? instr_a_ispm : T19;
+  assign T19 = selMCache ? instr_a_cache : instr_a_rom;
+  assign instr_a_rom = T40 ? data_even : data_odd;
+  assign T20 = romOdd[T21];
   initial begin
-    romOdd[0] = 32'h87fc0000/* -2013528064*/;
-    romOdd[1] = 32'h87e00000/* -2015363072*/;
-    romOdd[2] = 32'h400000/* 4194304*/;
-    romOdd[3] = 32'h7010000/* 117506048*/;
-    romOdd[4] = 32'h400000/* 4194304*/;
-    romOdd[5] = 32'h400000/* 4194304*/;
-    romOdd[6] = 1'h0/* 0*/;
+    romOdd[0] = 32'h3c0004/* 3932164*/;
+    romOdd[1] = 32'hcc601c/* 13393948*/;
+    romOdd[2] = 32'h2005a/* 131162*/;
+    romOdd[3] = 32'h6000057/* 100663383*/;
+    romOdd[4] = 32'h0/* 0*/;
+    romOdd[5] = 32'h2c26081/* 46293121*/;
+    romOdd[6] = 32'h0/* 0*/;
+    romOdd[7] = 32'h40008/* 262152*/;
+    romOdd[8] = 32'h2c26181/* 46293377*/;
+    romOdd[9] = 32'h0/* 0*/;
+    romOdd[10] = 32'h2c62180/* 46539136*/;
+    romOdd[11] = 32'h63001/* 405505*/;
+    romOdd[12] = 32'h6000057/* 100663383*/;
+    romOdd[13] = 32'h0/* 0*/;
+    romOdd[14] = 32'h42004/* 270340*/;
+    romOdd[15] = 32'h2c26181/* 46293377*/;
+    romOdd[16] = 32'h0/* 0*/;
+    romOdd[17] = 32'h2c62180/* 46539136*/;
+    romOdd[18] = 32'h63001/* 405505*/;
+    romOdd[19] = 32'h6000057/* 100663383*/;
+    romOdd[20] = 32'h0/* 0*/;
+    romOdd[21] = 32'h42004/* 270340*/;
+    romOdd[22] = 32'h2c26181/* 46293377*/;
+    romOdd[23] = 32'h0/* 0*/;
+    romOdd[24] = 32'h40008/* 262152*/;
+    romOdd[25] = 32'h0/* 0*/;
+    romOdd[26] = 32'h0/* 0*/;
+    romOdd[27] = 32'h42004/* 270340*/;
+    romOdd[28] = 32'h6000057/* 100663383*/;
+    romOdd[29] = 32'h0/* 0*/;
+    romOdd[30] = 32'h42004/* 270340*/;
+    romOdd[31] = 32'h6000057/* 100663383*/;
+    romOdd[32] = 32'h0/* 0*/;
+    romOdd[33] = 32'h42004/* 270340*/;
+    romOdd[34] = 32'h6000057/* 100663383*/;
+    romOdd[35] = 32'h0/* 0*/;
+    romOdd[36] = 32'h42004/* 270340*/;
+    romOdd[37] = 32'h6000057/* 100663383*/;
+    romOdd[38] = 32'h0/* 0*/;
+    romOdd[39] = 32'h400000/* 4194304*/;
+    romOdd[40] = 32'h0/* 0*/;
+    romOdd[41] = 32'h0/* 0*/;
+    romOdd[42] = 32'h0/* 0*/;
+    romOdd[43] = 32'h1e0fa0/* 1970080*/;
+    romOdd[44] = 32'h202f831/* 33749041*/;
+    romOdd[45] = 32'h210001/* 2162689*/;
+    romOdd[46] = 32'h781ef80/* 125955968*/;
+    romOdd[47] = 32'h0/* 0*/;
+    romOdd[48] = 1'h0/* 0*/;
   end
-  assign T14 = addrOdd[2'h3/* 3*/:1'h1/* 1*/];
-  assign addrOdd = T15;
-  assign T15 = T4 ? T16 : addrOddReg;
-  assign T16 = T17;
-  assign T17 = {T18, 1'h1/* 1*/};
-  assign T18 = pc_next[5'h1d/* 29*/:1'h1/* 1*/];
-  assign T19 = romEven[T20];
+  assign T21 = addrOdd[3'h6/* 6*/:1'h1/* 1*/];
+  assign T22 = romEven[T23];
   initial begin
-    romEven[0] = 32'h28/* 40*/;
-    romEven[1] = 32'h0/* 0*/;
-    romEven[2] = 32'h40004/* 262148*/;
-    romEven[3] = 32'h400000/* 4194304*/;
-    romEven[4] = 32'h400000/* 4194304*/;
-    romEven[5] = 32'h400000/* 4194304*/;
-    romEven[6] = 32'h400000/* 4194304*/;
+    romEven[0] = 32'h138/* 312*/;
+    romEven[1] = 32'hc000f/* 786447*/;
+    romEven[2] = 32'hc6800/* 813056*/;
+    romEven[3] = 32'h2c26081/* 46293121*/;
+    romEven[4] = 32'h0/* 0*/;
+    romEven[5] = 32'h20059/* 131161*/;
+    romEven[6] = 32'h6000057/* 100663383*/;
+    romEven[7] = 32'h0/* 0*/;
+    romEven[8] = 32'h60043/* 393283*/;
+    romEven[9] = 32'h6000057/* 100663383*/;
+    romEven[10] = 32'h0/* 0*/;
+    romEven[11] = 32'h42004/* 270340*/;
+    romEven[12] = 32'h2c26181/* 46293377*/;
+    romEven[13] = 32'h0/* 0*/;
+    romEven[14] = 32'h2c62180/* 46539136*/;
+    romEven[15] = 32'h63001/* 405505*/;
+    romEven[16] = 32'h6000057/* 100663383*/;
+    romEven[17] = 32'h0/* 0*/;
+    romEven[18] = 32'h42004/* 270340*/;
+    romEven[19] = 32'h2c26181/* 46293377*/;
+    romEven[20] = 32'h0/* 0*/;
+    romEven[21] = 32'h2c62180/* 46539136*/;
+    romEven[22] = 32'h63001/* 405505*/;
+    romEven[23] = 32'h6000057/* 100663383*/;
+    romEven[24] = 32'h0/* 0*/;
+    romEven[25] = 32'h0/* 0*/;
+    romEven[26] = 32'h0/* 0*/;
+    romEven[27] = 32'h2862180/* 42344832*/;
+    romEven[28] = 32'h2c26181/* 46293377*/;
+    romEven[29] = 32'h0/* 0*/;
+    romEven[30] = 32'h2862180/* 42344832*/;
+    romEven[31] = 32'h2c26181/* 46293377*/;
+    romEven[32] = 32'h0/* 0*/;
+    romEven[33] = 32'h2862180/* 42344832*/;
+    romEven[34] = 32'h2c26181/* 46293377*/;
+    romEven[35] = 32'h0/* 0*/;
+    romEven[36] = 32'h2862180/* 42344832*/;
+    romEven[37] = 32'h2c26181/* 46293377*/;
+    romEven[38] = 32'h0/* 0*/;
+    romEven[39] = 32'h7800000/* 125829120*/;
+    romEven[40] = 32'h0/* 0*/;
+    romEven[41] = 32'h0/* 0*/;
+    romEven[42] = 32'h0/* 0*/;
+    romEven[43] = 32'h2c/* 44*/;
+    romEven[44] = 32'h200000/* 2097152*/;
+    romEven[45] = 32'he7fffff/* 243269631*/;
+    romEven[46] = 32'h0/* 0*/;
+    romEven[47] = 32'h0/* 0*/;
+    romEven[48] = 32'h0/* 0*/;
   end
-  assign T20 = addrEven[2'h3/* 3*/:1'h1/* 1*/];
-  assign addrEven = T21;
-  assign T21 = T4 ? T22 : addrEvenReg;
-  assign T22 = T23;
-  assign T23 = {T24, 1'h0/* 0*/};
-  assign T24 = pc_inc[5'h1d/* 29*/:1'h1/* 1*/];
-  assign pc_inc = T36 ? pc_next2 : pc_next;
-  assign pc_next2 = io_memfe_doCallRet ? T32 : T25;
-  assign T25 = io_exfe_doBranch ? T30 : pc_cont2;
-  assign pc_cont2 = b_valid ? T28 : T26;
-  assign T26 = pcReg + T27;
-  assign T27 = {28'h0/* 0*/, 2'h3/* 3*/};
-  assign T28 = pcReg + T29;
-  assign T29 = {27'h0/* 0*/, 3'h4/* 4*/};
-  assign T30 = io_exfe_branchPc + T31;
-  assign T31 = {28'h0/* 0*/, 2'h2/* 2*/};
-  assign T32 = {18'h0/* 0*/, T33};
-  assign T33 = T35 + T34;
-  assign T34 = {10'h0/* 0*/, 2'h2/* 2*/};
-  assign T35 = io_mcachefe_relPc;
-  assign T36 = pc_next[1'h0/* 0*/:1'h0/* 0*/];
-  assign T37 = T38 == 1'h0/* 0*/;
-  assign T38 = pcReg[1'h0/* 0*/:1'h0/* 0*/];
-  assign instr_a_ispm = T58 ? T50 : T39;
-  assign T39 = memOdd[T49];
-  assign T41 = dataReg;
-  assign T42 = selWrite & T43;
-  assign T43 = T44 == 1'h1/* 1*/;
-  assign T44 = io_memfe_addr[2'h2/* 2*/:2'h2/* 2*/];
-  assign selWrite = io_memfe_store & T45;
-  assign T45 = T47 == T46;
-  assign T46 = {15'h0/* 0*/, 1'h1/* 1*/};
-  assign T47 = io_memfe_addr[5'h1f/* 31*/:5'h10/* 16*/];
-  assign T48 = addrReg[4'hc/* 12*/:2'h3/* 3*/];
-  assign T49 = addrOddReg[4'ha/* 10*/:1'h1/* 1*/];
-  assign T50 = memEven[T57];
-  assign T52 = dataReg;
-  assign T53 = selWrite & T54;
-  assign T54 = T55 == 1'h0/* 0*/;
-  assign T55 = io_memfe_addr[2'h2/* 2*/:2'h2/* 2*/];
-  assign T56 = addrReg[4'hc/* 12*/:2'h3/* 3*/];
-  assign T57 = addrEvenReg[4'ha/* 10*/:1'h1/* 1*/];
-  assign T58 = T59 == 1'h0/* 0*/;
-  assign T59 = pcReg[1'h0/* 0*/:1'h0/* 0*/];
-  assign T60 = io_mcachefe_mem_sel[1'h1/* 1*/:1'h1/* 1*/];
-  assign T61 = {18'h0/* 0*/, T62};
-  assign T62 = io_mcachefe_relPc;
-  assign io_femem_pc = T63;
-  assign T63 = T64[4'ha/* 10*/:1'h0/* 0*/];
-  assign T64 = pc_cont - T65;
-  assign T65 = {19'h0/* 0*/, relBaseReg};
-  assign T66 = io_memfe_doCallRet && io_ena;
+  assign T23 = addrEven[3'h6/* 6*/:1'h1/* 1*/];
+  assign addrEven = T24;
+  assign T24 = T14 ? T25 : addrEvenReg;
+  assign T25 = T26;
+  assign T26 = {T27, 1'h0/* 0*/};
+  assign T27 = pc_inc[5'h1d/* 29*/:1'h1/* 1*/];
+  assign pc_inc = T39 ? pc_next2 : pc_next;
+  assign pc_next2 = io_memfe_doCallRet ? T35 : T28;
+  assign T28 = io_exfe_doBranch ? T33 : pc_cont2;
+  assign pc_cont2 = b_valid ? T31 : T29;
+  assign T29 = pcReg + T30;
+  assign T30 = {28'h0/* 0*/, 2'h3/* 3*/};
+  assign T31 = pcReg + T32;
+  assign T32 = {27'h0/* 0*/, 3'h4/* 4*/};
+  assign T33 = io_exfe_branchPc + T34;
+  assign T34 = {28'h0/* 0*/, 2'h2/* 2*/};
+  assign T35 = {18'h0/* 0*/, T36};
+  assign T36 = T38 + T37;
+  assign T37 = {10'h0/* 0*/, 2'h2/* 2*/};
+  assign T38 = io_mcachefe_relPc;
+  assign T39 = pc_next[1'h0/* 0*/:1'h0/* 0*/];
+  assign T40 = T41 == 1'h0/* 0*/;
+  assign T41 = pcReg[1'h0/* 0*/:1'h0/* 0*/];
+  assign instr_a_cache = T42 ? io_mcachefe_instrEven : io_mcachefe_instrOdd;
+  assign T42 = T43 == 1'h0/* 0*/;
+  assign T43 = pcReg[1'h0/* 0*/:1'h0/* 0*/];
+  assign T44 = io_mcachefe_memSel[1'h0/* 0*/:1'h0/* 0*/];
+  assign instr_a_ispm = T45 ? memEven_io_rdData : memOdd_io_rdData;
+  assign T45 = T46 == 1'h0/* 0*/;
+  assign T46 = pcReg[1'h0/* 0*/:1'h0/* 0*/];
+  assign T47 = io_mcachefe_memSel[1'h1/* 1*/:1'h1/* 1*/];
+  assign T48 = {18'h0/* 0*/, T49};
+  assign T49 = io_mcachefe_relPc;
+  assign wrEven = selWrite & T50;
+  assign T50 = T51 == 1'h0/* 0*/;
+  assign T51 = io_memfe_addr[2'h2/* 2*/:2'h2/* 2*/];
+  assign T52 = io_memfe_addr[4'h9/* 9*/:1'h0/* 0*/];
+  assign T53 = addrEven[4'ha/* 10*/:1'h1/* 1*/];
+  assign io_femcache_addrOdd = T54;
+  assign T54 = {2'h0/* 0*/, addrOdd};
+  assign io_femcache_addrEven = T55;
+  assign T55 = {2'h0/* 0*/, addrEven};
+  assign io_femem_pc = T56;
+  assign T56 = T57[4'ha/* 10*/:1'h0/* 0*/];
+  assign T57 = b_valid ? T62 : T58;
+  assign T58 = relPc + T59;
+  assign T59 = {29'h0/* 0*/, 1'h1/* 1*/};
+  assign relPc = pcReg - T60;
+  assign T60 = {19'h0/* 0*/, relBaseReg};
+  assign T61 = io_memfe_doCallRet && io_ena;
+  assign T62 = relPc + T63;
+  assign T63 = {28'h0/* 0*/, 2'h2/* 2*/};
   assign io_fedec_reloc = relocReg;
   assign io_fedec_pc = pcReg;
   assign io_fedec_instr_b = instr_b;
-  assign instr_b = selIspm ? instr_b_ispm : T67;
-  assign T67 = selMCache ? io_mcachefe_instr_b : instr_b_rom;
-  assign instr_b_rom = T68 ? data_odd : data_even;
-  assign T68 = T69 == 1'h0/* 0*/;
-  assign T69 = pcReg[1'h0/* 0*/:1'h0/* 0*/];
-  assign instr_b_ispm = T70 ? T39 : T50;
-  assign T70 = T71 == 1'h0/* 0*/;
-  assign T71 = pcReg[1'h0/* 0*/:1'h0/* 0*/];
+  assign instr_b = selIspm ? instr_b_ispm : T64;
+  assign T64 = selMCache ? instr_b_cache : instr_b_rom;
+  assign instr_b_rom = T65 ? data_odd : data_even;
+  assign T65 = T66 == 1'h0/* 0*/;
+  assign T66 = pcReg[1'h0/* 0*/:1'h0/* 0*/];
+  assign instr_b_cache = T67 ? io_mcachefe_instrOdd : io_mcachefe_instrEven;
+  assign T67 = T68 == 1'h0/* 0*/;
+  assign T68 = pcReg[1'h0/* 0*/:1'h0/* 0*/];
+  assign instr_b_ispm = T69 ? memOdd_io_rdData : memEven_io_rdData;
+  assign T69 = T70 == 1'h0/* 0*/;
+  assign T70 = pcReg[1'h0/* 0*/:1'h0/* 0*/];
   assign io_fedec_instr_a = instr_a;
+  MemBlock_1 memEven(.clk(clk),
+       .io_rdAddr( T53 ),
+       .io_rdData( memEven_io_rdData ),
+       .io_wrAddr( T52 ),
+       .io_wrEna( wrEven ),
+       .io_wrData( io_memfe_data )
+  );
+  MemBlock_1 memOdd(.clk(clk),
+       .io_rdAddr( T6 ),
+       .io_rdData( memOdd_io_rdData ),
+       .io_wrAddr( T5 ),
+       .io_wrEna( wrOdd ),
+       .io_wrData( io_memfe_data )
+  );
 
   always @(posedge clk) begin
-    selMCache <= T1;
+    addrOddReg <= reset ? 30'h1/* 1*/ : addrOdd;
     if(reset) begin
       pcReg <= 30'h1/* 1*/;
-    end else if(T4) begin
+    end else if(T14) begin
       pcReg <= pc_next;
     end
-    data_odd <= T13;
-    addrOddReg <= reset ? 30'h1/* 1*/ : addrOdd;
-    data_even <= T19;
+    data_odd <= T20;
+    data_even <= T22;
     addrEvenReg <= reset ? 30'h2/* 2*/ : addrEven;
-    if (wrOddReg)
-      memOdd[T48] <= T41;
-    dataReg <= io_memfe_data;
-    wrOddReg <= T42;
-    addrReg <= io_memfe_addr;
-    if (wrEvenReg)
-      memEven[T56] <= T52;
-    wrEvenReg <= T53;
-    selIspm <= T60;
+    selMCache <= T44;
+    selIspm <= T47;
     if(reset) begin
       relBaseReg <= 11'h1/* 1*/;
-    end else if(T66) begin
+    end else if(T61) begin
       relBaseReg <= io_mcachefe_relBase;
     end
     if(reset) begin
       relocReg <= 32'h0/* 0*/;
-    end else if(T66) begin
+    end else if(T61) begin
       relocReg <= io_mcachefe_reloc;
     end
   end
@@ -4079,228 +4230,205 @@ module Execute(input clk, input reset,
   wire[63:0] T583;
   wire[63:0] T584;
   reg[31:0] mulLHReg;
-  wire T585;
-  wire T586;
-  wire T587;
-  wire[31:0] T588;
-  wire[31:0] T589;
+  wire[31:0] T585;
+  wire[63:0] T586;
+  wire[31:0] T587;
+  wire[15:0] T588;
+  wire[15:0] T589;
   wire[15:0] T590;
   wire[15:0] T591;
-  wire[15:0] T592;
-  wire[15:0] T593;
+  wire T592;
+  wire T593;
   wire[31:0] T594;
-  wire[47:0] T595;
-  wire[47:0] T596;
-  wire[31:0] T597;
-  wire signed [15:0] T598;
-  wire[15:0] T599;
-  wire T600;
-  wire[15:0] T601;
-  wire[15:0] T602;
-  wire T603;
-  wire[63:0] T604;
-  wire[63:0] T605;
+  wire[15:0] T595;
+  wire[15:0] T596;
+  reg[0:0] signLHReg;
+  wire T597;
+  wire[63:0] T598;
+  wire[63:0] T599;
   reg[31:0] mulHLReg;
-  wire T606;
-  wire[31:0] T607;
-  wire[31:0] T608;
-  wire[15:0] T609;
+  wire[31:0] T600;
+  wire[63:0] T601;
+  wire[31:0] T602;
+  wire[15:0] T603;
+  wire[31:0] T604;
+  wire[15:0] T605;
+  wire[15:0] T606;
+  wire[15:0] T607;
+  wire[15:0] T608;
+  wire T609;
   wire[15:0] T610;
-  wire[15:0] T611;
-  wire[15:0] T612;
-  wire[31:0] T613;
-  wire[47:0] T614;
-  wire[47:0] T615;
-  wire[15:0] T616;
-  wire[31:0] T617;
-  wire signed [15:0] T618;
-  wire[15:0] T619;
-  wire T620;
-  wire[15:0] T621;
-  wire T622;
-  wire[63:0] T623;
+  reg[0:0] signHLReg;
+  wire T611;
+  wire[63:0] T612;
   reg[31:0] mulLLReg;
+  wire[31:0] T613;
+  wire[63:0] T614;
+  reg[31:0] mulHHReg;
+  wire[31:0] T615;
+  wire[63:0] T616;
+  wire[31:0] T617;
+  wire[31:0] T618;
+  wire T619;
+  reg[31:0] mulHiReg;
+  wire T620;
+  wire T621;
+  wire T622;
+  wire T623;
   wire T624;
-  wire[31:0] T625;
+  wire T625;
   wire[31:0] T626;
-  wire[15:0] T627;
-  wire[15:0] T628;
+  wire[31:0] T627;
+  wire[31:0] T628;
   wire[31:0] T629;
   wire[31:0] T630;
-  wire[31:0] T631;
-  wire[15:0] T632;
-  wire[15:0] T633;
-  reg[31:0] mulHHReg;
+  wire T631;
+  reg[31:0] stackTopReg;
+  wire T632;
+  wire T633;
   wire T634;
-  wire[31:0] T635;
-  wire[31:0] T636;
-  wire[15:0] T637;
-  wire[15:0] T638;
-  wire[31:0] T639;
-  wire[63:0] T640;
-  wire[63:0] T641;
-  wire[31:0] T642;
-  wire[31:0] T643;
+  wire T635;
+  wire T636;
+  wire T637;
+  reg[0:0] exReg_aluOp_1_isSTC;
+  wire T638;
+  wire T639;
+  wire T640;
+  wire T641;
+  wire T642;
+  wire T643;
   wire T644;
-  reg[31:0] mulHiReg;
+  reg[0:0] exReg_aluOp_0_isSTC;
   wire T645;
-  wire T646;
-  wire T647;
-  wire T648;
-  wire T649;
-  wire T650;
+  wire[31:0] T646;
+  wire[31:0] T647;
+  wire[31:0] T648;
+  wire[31:0] T649;
+  wire[31:0] T650;
   wire[31:0] T651;
   wire[31:0] T652;
-  wire[31:0] T653;
-  wire[31:0] T654;
-  wire[31:0] T655;
+  wire T653;
+  reg[31:0] stackSpillReg;
+  wire T654;
+  wire T655;
   wire T656;
-  reg[31:0] stackTopReg;
   wire T657;
   wire T658;
-  wire T659;
-  wire T660;
-  wire T661;
+  wire[31:0] T659;
+  wire[31:0] T660;
+  wire[31:0] T661;
   wire T662;
-  reg[0:0] exReg_aluOp_1_isSTC;
+  reg[0:0] exReg_aluOp_1_isMFS;
   wire T663;
   wire T664;
-  wire T665;
-  wire T666;
-  wire T667;
-  wire T668;
-  wire T669;
-  reg[0:0] exReg_aluOp_0_isSTC;
-  wire T670;
-  wire[31:0] T671;
-  wire[31:0] T672;
-  wire[31:0] T673;
-  wire[31:0] T674;
-  wire[31:0] T675;
-  wire[31:0] T676;
-  wire[31:0] T677;
-  wire T678;
-  reg[31:0] stackSpillReg;
-  wire T679;
-  wire T680;
-  wire T681;
-  wire T682;
-  wire T683;
-  wire[31:0] T684;
-  wire[31:0] T685;
-  wire[31:0] T686;
-  wire T687;
-  reg[0:0] exReg_aluOp_1_isMFS;
-  wire T688;
-  wire T689;
   reg[4:0] exReg_rdAddr_1;
-  wire[4:0] T690;
-  wire[4:0] T691;
-  wire T692;
+  wire[4:0] T665;
+  wire[4:0] T666;
+  wire T667;
   reg[0:0] exReg_wrRd_0;
-  wire T693;
-  wire[31:0] T694;
-  wire[31:0] T695;
+  wire T668;
+  wire[31:0] T669;
+  wire[31:0] T670;
+  wire[31:0] T671;
+  wire[62:0] T672;
+  wire[62:0] T673;
+  wire[62:0] T674;
+  wire[62:0] T675;
+  wire[62:0] T676;
+  wire[62:0] T677;
+  wire[62:0] T678;
+  wire[62:0] T679;
+  wire[62:0] T680;
+  wire[34:0] T681;
+  wire[34:0] T682;
+  wire[34:0] T683;
+  wire[34:0] T684;
+  wire[34:0] T685;
+  wire[34:0] T686;
+  wire[1:0] T687;
+  wire[1:0] T688;
+  wire T689;
+  wire T690;
+  wire T691;
+  wire[34:0] T692;
+  wire[31:0] T693;
+  wire T694;
+  wire[34:0] T695;
   wire[31:0] T696;
-  wire[62:0] T697;
-  wire[62:0] T698;
+  wire[31:0] T697;
+  wire T698;
   wire[62:0] T699;
   wire[62:0] T700;
-  wire[62:0] T701;
-  wire[62:0] T702;
-  wire[62:0] T703;
+  wire[4:0] T701;
+  wire[4:0] T702;
+  wire T703;
   wire[62:0] T704;
-  wire[62:0] T705;
-  wire[34:0] T706;
-  wire[34:0] T707;
-  wire[34:0] T708;
-  wire[34:0] T709;
-  wire[34:0] T710;
-  wire[34:0] T711;
-  wire[1:0] T712;
-  wire[1:0] T713;
-  wire T714;
-  wire T715;
+  wire[31:0] T705;
+  wire[31:0] T706;
+  wire T707;
+  wire[62:0] T708;
+  wire[31:0] T709;
+  wire signed [31:0] T710;
+  wire signed [31:0] T711;
+  wire T712;
+  wire[62:0] T713;
+  wire[31:0] T714;
+  wire[31:0] T715;
   wire T716;
-  wire[34:0] T717;
+  wire[62:0] T717;
   wire[31:0] T718;
-  wire T719;
-  wire[34:0] T720;
-  wire[31:0] T721;
+  wire[31:0] T719;
+  wire T720;
+  wire[62:0] T721;
   wire[31:0] T722;
-  wire T723;
-  wire[62:0] T724;
-  wire[62:0] T725;
-  wire[4:0] T726;
-  wire[4:0] T727;
-  wire T728;
-  wire[62:0] T729;
+  wire[31:0] T723;
+  wire[31:0] T724;
+  wire T725;
+  wire[62:0] T726;
+  wire T727;
+  wire[62:0] T728;
+  wire T729;
   wire[31:0] T730;
   wire[31:0] T731;
-  wire T732;
-  wire[62:0] T733;
+  wire[31:0] T732;
+  wire[31:0] T733;
   wire[31:0] T734;
-  wire signed [31:0] T735;
-  wire signed [31:0] T736;
-  wire T737;
-  wire[62:0] T738;
-  wire[31:0] T739;
-  wire[31:0] T740;
+  wire[31:0] T735;
+  wire[31:0] T736;
+  wire[31:0] T737;
+  wire[7:0] T738;
+  wire T739;
+  wire T740;
   wire T741;
-  wire[62:0] T742;
-  wire[31:0] T743;
-  wire[31:0] T744;
+  wire T742;
+  wire T743;
+  wire T744;
   wire T745;
-  wire[62:0] T746;
-  wire[31:0] T747;
-  wire[31:0] T748;
-  wire[31:0] T749;
+  wire T746;
+  wire T747;
+  wire T748;
+  wire T749;
   wire T750;
-  wire[62:0] T751;
+  wire T751;
+  reg[0:0] exReg_aluOp_0_isMFS;
   wire T752;
-  wire[62:0] T753;
-  wire T754;
+  reg[4:0] exReg_rdAddr_0;
+  wire[4:0] T753;
+  wire[4:0] T754;
   wire[31:0] T755;
   wire[31:0] T756;
   wire[31:0] T757;
   wire[31:0] T758;
   wire[31:0] T759;
   wire[31:0] T760;
-  wire[31:0] T761;
-  wire[31:0] T762;
-  wire[7:0] T763;
-  wire T764;
-  wire T765;
+  wire T761;
+  wire T762;
+  wire T763;
+  wire[31:0] T764;
+  wire[31:0] T765;
   wire T766;
   wire T767;
   wire T768;
-  wire T769;
-  wire T770;
-  wire T771;
-  wire T772;
-  wire T773;
-  wire T774;
-  wire T775;
-  wire T776;
-  reg[0:0] exReg_aluOp_0_isMFS;
-  wire T777;
-  reg[4:0] exReg_rdAddr_0;
-  wire[4:0] T778;
-  wire[4:0] T779;
-  wire[31:0] T780;
-  wire[31:0] T781;
-  wire[31:0] T782;
-  wire[31:0] T783;
-  wire[31:0] T784;
-  wire[31:0] T785;
-  wire T786;
-  wire T787;
-  wire T788;
-  wire[31:0] T789;
-  wire[31:0] T790;
-  wire T791;
-  wire T792;
-  wire T793;
 
   assign io_exfe_branchPc = T0;
   assign T0 = target[5'h1d/* 29*/:1'h0/* 0*/];
@@ -4885,10 +5013,10 @@ module Execute(input clk, input reset,
   assign T550 = {28'h0/* 0*/, T506};
   assign T551 = exReg_aluOp_1_func == 4'b1101/* 0*/;
   assign T552 = T553;
-  assign T553 = T687 ? stackSpillReg : T554;
-  assign T554 = T678 ? stackTopReg : T555;
-  assign T555 = T656 ? mulHiReg : T556;
-  assign T556 = T644 ? mulLoReg : T557;
+  assign T553 = T662 ? stackSpillReg : T554;
+  assign T554 = T653 ? stackTopReg : T555;
+  assign T555 = T631 ? mulHiReg : T556;
+  assign T556 = T619 ? mulLoReg : T557;
   assign T557 = T569 ? T558 : 32'h0/* 0*/;
   assign T558 = T559;
   assign T559 = {24'h0/* 0*/, T560};
@@ -4912,225 +5040,200 @@ module Execute(input clk, input reset,
   assign T577 = exReg_aluOp_0_isMul && doExecute_0;
   assign T578 = T579;
   assign T579 = 1'h0/* 0*/;
-  assign T580 = T571 ? T643 : T581;
-  assign T581 = T574 ? T642 : T582;
+  assign T580 = T571 ? T618 : T581;
+  assign T581 = T574 ? T617 : T582;
   assign T582 = T583[5'h1f/* 31*/:1'h0/* 0*/];
-  assign T583 = T604 + T584;
-  assign T584 = {T602, mulLHReg, 16'h0/* 0*/};
-  assign T585 = io_ena || T586;
-  assign T586 = io_ena && T587;
-  assign T587 = exReg_aluOp_0_func == 4'b0000/* 0*/;
-  assign T588 = T586 ? T594 : T589;
-  assign T589 = T592 * T590;
-  assign T590 = T591;
-  assign T591 = op_1[5'h1f/* 31*/:5'h10/* 16*/];
-  assign T592 = T593;
-  assign T593 = op_0[4'hf/* 15*/:1'h0/* 0*/];
-  assign T594 = T595[5'h1f/* 31*/:1'h0/* 0*/];
-  assign T595 = T596;
-  assign T596 = T601 * T597;
-  assign T597 = {T599, T598};
-  assign T598 = T591;
-  assign T599 = {5'h10/* 16*/{T600}};
-  assign T600 = T591[4'hf/* 15*/:4'hf/* 15*/];
-  assign T601 = T593;
-  assign T602 = {5'h10/* 16*/{T603}};
-  assign T603 = mulLHReg[5'h1f/* 31*/:5'h1f/* 31*/];
-  assign T604 = T623 + T605;
-  assign T605 = {T621, mulHLReg, 16'h0/* 0*/};
-  assign T606 = io_ena || T586;
-  assign T607 = T586 ? T613 : T608;
-  assign T608 = T611 * T609;
-  assign T609 = T610;
-  assign T610 = op_1[4'hf/* 15*/:1'h0/* 0*/];
-  assign T611 = T612;
-  assign T612 = op_0[5'h1f/* 31*/:5'h10/* 16*/];
+  assign T583 = T598 + T584;
+  assign T584 = {T596, mulLHReg, 16'h0/* 0*/};
+  assign T585 = T586[5'h1f/* 31*/:1'h0/* 0*/];
+  assign T586 = T594 * T587;
+  assign T587 = {T589, T588};
+  assign T588 = op_1[5'h1f/* 31*/:5'h10/* 16*/];
+  assign T589 = T593 ? T591 : T590;
+  assign T590 = {15'h0/* 0*/, 1'h0/* 0*/};
+  assign T591 = {5'h10/* 16*/{T592}};
+  assign T592 = op_1[5'h1f/* 31*/:5'h1f/* 31*/];
+  assign T593 = exReg_aluOp_0_func == 4'b0000/* 0*/;
+  assign T594 = {16'h0/* 0*/, T595};
+  assign T595 = op_0[4'hf/* 15*/:1'h0/* 0*/];
+  assign T596 = {5'h10/* 16*/{signLHReg}};
+  assign T597 = T587[5'h10/* 16*/:5'h10/* 16*/];
+  assign T598 = T612 + T599;
+  assign T599 = {T610, mulHLReg, 16'h0/* 0*/};
+  assign T600 = T601[5'h1f/* 31*/:1'h0/* 0*/];
+  assign T601 = T604 * T602;
+  assign T602 = {16'h0/* 0*/, T603};
+  assign T603 = op_1[4'hf/* 15*/:1'h0/* 0*/];
+  assign T604 = {T606, T605};
+  assign T605 = op_0[5'h1f/* 31*/:5'h10/* 16*/];
+  assign T606 = T593 ? T608 : T607;
+  assign T607 = {15'h0/* 0*/, 1'h0/* 0*/};
+  assign T608 = {5'h10/* 16*/{T609}};
+  assign T609 = op_0[5'h1f/* 31*/:5'h1f/* 31*/];
+  assign T610 = {5'h10/* 16*/{signHLReg}};
+  assign T611 = T604[5'h10/* 16*/:5'h10/* 16*/];
+  assign T612 = {mulHHReg, mulLLReg};
   assign T613 = T614[5'h1f/* 31*/:1'h0/* 0*/];
-  assign T614 = T615;
-  assign T615 = T617 * T616;
-  assign T616 = T610;
-  assign T617 = {T619, T618};
-  assign T618 = T612;
-  assign T619 = {5'h10/* 16*/{T620}};
-  assign T620 = T612[4'hf/* 15*/:4'hf/* 15*/];
-  assign T621 = {5'h10/* 16*/{T622}};
-  assign T622 = mulHLReg[5'h1f/* 31*/:5'h1f/* 31*/];
-  assign T623 = {mulHHReg, mulLLReg};
-  assign T624 = io_ena || T586;
-  assign T625 = T586 ? T629 : T626;
-  assign T626 = T628 * T627;
-  assign T627 = T610;
-  assign T628 = T593;
-  assign T629 = T630[5'h1f/* 31*/:1'h0/* 0*/];
-  assign T630 = T631;
-  assign T631 = T633 * T632;
-  assign T632 = T610;
-  assign T633 = T593;
-  assign T634 = io_ena || T586;
-  assign T635 = T586 ? T639 : T636;
-  assign T636 = T638 * T637;
-  assign T637 = T591;
-  assign T638 = T612;
-  assign T639 = T640[5'h1f/* 31*/:1'h0/* 0*/];
-  assign T640 = T641;
-  assign T641 = T617 * T597;
-  assign T642 = op_0;
-  assign T643 = op_2;
-  assign T644 = exReg_aluOp_1_func == 4'b0010/* 0*/;
-  assign T645 = T648 || T646;
-  assign T646 = T75 && T647;
-  assign T647 = exReg_aluOp_1_func == 4'b0011/* 0*/;
-  assign T648 = T576 || T649;
-  assign T649 = T105 && T650;
-  assign T650 = exReg_aluOp_0_func == 4'b0011/* 0*/;
-  assign T651 = T646 ? T655 : T652;
-  assign T652 = T649 ? T654 : T653;
-  assign T653 = T583[6'h3f/* 63*/:6'h20/* 32*/];
-  assign T654 = op_0;
-  assign T655 = op_2;
-  assign T656 = exReg_aluOp_1_func == 4'b0011/* 0*/;
-  assign T657 = T660 || T658;
-  assign T658 = T75 && T659;
-  assign T659 = exReg_aluOp_1_func == 4'b0110/* 0*/;
-  assign T660 = T665 || T661;
-  assign T661 = T662 && io_ena;
-  assign T662 = exReg_aluOp_1_isSTC && doExecute_1;
+  assign T614 = T594 * T602;
+  assign T615 = T616[5'h1f/* 31*/:1'h0/* 0*/];
+  assign T616 = T604 * T587;
+  assign T617 = op_0;
+  assign T618 = op_2;
+  assign T619 = exReg_aluOp_1_func == 4'b0010/* 0*/;
+  assign T620 = T623 || T621;
+  assign T621 = T75 && T622;
+  assign T622 = exReg_aluOp_1_func == 4'b0011/* 0*/;
+  assign T623 = T576 || T624;
+  assign T624 = T105 && T625;
+  assign T625 = exReg_aluOp_0_func == 4'b0011/* 0*/;
+  assign T626 = T621 ? T630 : T627;
+  assign T627 = T624 ? T629 : T628;
+  assign T628 = T583[6'h3f/* 63*/:6'h20/* 32*/];
+  assign T629 = op_0;
+  assign T630 = op_2;
+  assign T631 = exReg_aluOp_1_func == 4'b0011/* 0*/;
+  assign T632 = T635 || T633;
+  assign T633 = T75 && T634;
+  assign T634 = exReg_aluOp_1_func == 4'b0110/* 0*/;
+  assign T635 = T640 || T636;
+  assign T636 = T637 && io_ena;
+  assign T637 = exReg_aluOp_1_isSTC && doExecute_1;
+  assign T638 = T639;
+  assign T639 = 1'h0/* 0*/;
+  assign T640 = T643 || T641;
+  assign T641 = T105 && T642;
+  assign T642 = exReg_aluOp_0_func == 4'b0110/* 0*/;
+  assign T643 = T644 && io_ena;
+  assign T644 = exReg_aluOp_0_isSTC && doExecute_0;
+  assign T645 = T639;
+  assign T646 = T633 ? T652 : T647;
+  assign T647 = T636 ? T651 : T648;
+  assign T648 = T641 ? T650 : T649;
+  assign T649 = op_1;
+  assign T650 = op_0;
+  assign T651 = op_3;
+  assign T652 = op_2;
+  assign T653 = exReg_aluOp_1_func == 4'b0110/* 0*/;
+  assign T654 = T657 || T655;
+  assign T655 = T75 && T656;
+  assign T656 = exReg_aluOp_1_func == 4'b0101/* 0*/;
+  assign T657 = T105 && T658;
+  assign T658 = exReg_aluOp_0_func == 4'b0101/* 0*/;
+  assign T659 = T655 ? T661 : T660;
+  assign T660 = op_0;
+  assign T661 = op_2;
+  assign T662 = exReg_aluOp_1_func == 4'b0101/* 0*/;
   assign T663 = T664;
   assign T664 = 1'h0/* 0*/;
-  assign T665 = T668 || T666;
-  assign T666 = T105 && T667;
-  assign T667 = exReg_aluOp_0_func == 4'b0110/* 0*/;
-  assign T668 = T669 && io_ena;
-  assign T669 = exReg_aluOp_0_isSTC && doExecute_0;
-  assign T670 = T664;
-  assign T671 = T658 ? T677 : T672;
-  assign T672 = T661 ? T676 : T673;
-  assign T673 = T666 ? T675 : T674;
-  assign T674 = op_1;
-  assign T675 = op_0;
-  assign T676 = op_3;
-  assign T677 = op_2;
-  assign T678 = exReg_aluOp_1_func == 4'b0110/* 0*/;
-  assign T679 = T682 || T680;
-  assign T680 = T75 && T681;
-  assign T681 = exReg_aluOp_1_func == 4'b0101/* 0*/;
-  assign T682 = T105 && T683;
-  assign T683 = exReg_aluOp_0_func == 4'b0101/* 0*/;
-  assign T684 = T680 ? T686 : T685;
-  assign T685 = op_0;
-  assign T686 = op_2;
-  assign T687 = exReg_aluOp_1_func == 4'b0101/* 0*/;
-  assign T688 = T689;
-  assign T689 = 1'h0/* 0*/;
   assign io_exmem_rd_1_addr = exReg_rdAddr_1;
-  assign T690 = T691;
-  assign T691 = {4'h0/* 0*/, 1'h0/* 0*/};
-  assign io_exmem_rd_0_valid = T692;
-  assign T692 = exReg_wrRd_0 && doExecute_0;
-  assign T693 = 1'h0/* 0*/;
-  assign io_exmem_rd_0_data = T694;
-  assign T694 = exReg_aluOp_0_isMFS ? T755 : T695;
-  assign T695 = T696;
-  assign T696 = T697[5'h1f/* 31*/:1'h0/* 0*/];
-  assign T697 = T754 ? T753 : T698;
-  assign T698 = T752 ? T751 : T699;
-  assign T699 = T750 ? T746 : T700;
-  assign T700 = T745 ? T742 : T701;
-  assign T701 = T741 ? T738 : T702;
-  assign T702 = T737 ? T733 : T703;
-  assign T703 = T732 ? T729 : T704;
-  assign T704 = T728 ? T724 : T705;
-  assign T705 = {28'h0/* 0*/, T706};
-  assign T706 = T723 ? T720 : T707;
-  assign T707 = T719 ? T717 : T708;
-  assign T708 = T716 ? T709 : T709;
-  assign T709 = T711 + T710;
-  assign T710 = {3'h0/* 0*/, op_1};
-  assign T711 = op_0 << T712;
-  assign T712 = T715 ? 2'h2/* 2*/ : T713;
-  assign T713 = {1'h0/* 0*/, T714};
-  assign T714 = exReg_aluOp_0_func == 4'b1100/* 0*/;
-  assign T715 = exReg_aluOp_0_func == 4'b1101/* 0*/;
-  assign T716 = exReg_aluOp_0_func == 4'b0000/* 0*/;
-  assign T717 = {3'h0/* 0*/, T718};
-  assign T718 = op_0 - op_1;
-  assign T719 = exReg_aluOp_0_func == 4'b0001/* 0*/;
-  assign T720 = {3'h0/* 0*/, T721};
-  assign T721 = T722;
-  assign T722 = op_0 ^ op_1;
-  assign T723 = exReg_aluOp_0_func == 4'b0010/* 0*/;
-  assign T724 = T725;
-  assign T725 = op_0 << T726;
-  assign T726 = T727;
-  assign T727 = op_1[3'h4/* 4*/:1'h0/* 0*/];
-  assign T728 = exReg_aluOp_0_func == 4'b0011/* 0*/;
-  assign T729 = {31'h0/* 0*/, T730};
+  assign T665 = T666;
+  assign T666 = {4'h0/* 0*/, 1'h0/* 0*/};
+  assign io_exmem_rd_0_valid = T667;
+  assign T667 = exReg_wrRd_0 && doExecute_0;
+  assign T668 = 1'h0/* 0*/;
+  assign io_exmem_rd_0_data = T669;
+  assign T669 = exReg_aluOp_0_isMFS ? T730 : T670;
+  assign T670 = T671;
+  assign T671 = T672[5'h1f/* 31*/:1'h0/* 0*/];
+  assign T672 = T729 ? T728 : T673;
+  assign T673 = T727 ? T726 : T674;
+  assign T674 = T725 ? T721 : T675;
+  assign T675 = T720 ? T717 : T676;
+  assign T676 = T716 ? T713 : T677;
+  assign T677 = T712 ? T708 : T678;
+  assign T678 = T707 ? T704 : T679;
+  assign T679 = T703 ? T699 : T680;
+  assign T680 = {28'h0/* 0*/, T681};
+  assign T681 = T698 ? T695 : T682;
+  assign T682 = T694 ? T692 : T683;
+  assign T683 = T691 ? T684 : T684;
+  assign T684 = T686 + T685;
+  assign T685 = {3'h0/* 0*/, op_1};
+  assign T686 = op_0 << T687;
+  assign T687 = T690 ? 2'h2/* 2*/ : T688;
+  assign T688 = {1'h0/* 0*/, T689};
+  assign T689 = exReg_aluOp_0_func == 4'b1100/* 0*/;
+  assign T690 = exReg_aluOp_0_func == 4'b1101/* 0*/;
+  assign T691 = exReg_aluOp_0_func == 4'b0000/* 0*/;
+  assign T692 = {3'h0/* 0*/, T693};
+  assign T693 = op_0 - op_1;
+  assign T694 = exReg_aluOp_0_func == 4'b0001/* 0*/;
+  assign T695 = {3'h0/* 0*/, T696};
+  assign T696 = T697;
+  assign T697 = op_0 ^ op_1;
+  assign T698 = exReg_aluOp_0_func == 4'b0010/* 0*/;
+  assign T699 = T700;
+  assign T700 = op_0 << T701;
+  assign T701 = T702;
+  assign T702 = op_1[3'h4/* 4*/:1'h0/* 0*/];
+  assign T703 = exReg_aluOp_0_func == 4'b0011/* 0*/;
+  assign T704 = {31'h0/* 0*/, T705};
+  assign T705 = T706;
+  assign T706 = op_0 >> T701;
+  assign T707 = exReg_aluOp_0_func == 4'b0100/* 0*/;
+  assign T708 = {31'h0/* 0*/, T709};
+  assign T709 = T710;
+  assign T710 = $signed(T711) >>> T701;
+  assign T711 = op_0;
+  assign T712 = exReg_aluOp_0_func == 4'b0101/* 0*/;
+  assign T713 = {31'h0/* 0*/, T714};
+  assign T714 = T715;
+  assign T715 = op_0 | op_1;
+  assign T716 = exReg_aluOp_0_func == 4'b0110/* 0*/;
+  assign T717 = {31'h0/* 0*/, T718};
+  assign T718 = T719;
+  assign T719 = op_0 & op_1;
+  assign T720 = exReg_aluOp_0_func == 4'b0111/* 0*/;
+  assign T721 = {31'h0/* 0*/, T722};
+  assign T722 = T723;
+  assign T723 = ~ T724;
+  assign T724 = op_0 | op_1;
+  assign T725 = exReg_aluOp_0_func == 4'b1011/* 0*/;
+  assign T726 = {28'h0/* 0*/, T684};
+  assign T727 = exReg_aluOp_0_func == 4'b1100/* 0*/;
+  assign T728 = {28'h0/* 0*/, T684};
+  assign T729 = exReg_aluOp_0_func == 4'b1101/* 0*/;
   assign T730 = T731;
-  assign T731 = op_0 >> T726;
-  assign T732 = exReg_aluOp_0_func == 4'b0100/* 0*/;
-  assign T733 = {31'h0/* 0*/, T734};
-  assign T734 = T735;
-  assign T735 = $signed(T736) >>> T726;
-  assign T736 = op_0;
-  assign T737 = exReg_aluOp_0_func == 4'b0101/* 0*/;
-  assign T738 = {31'h0/* 0*/, T739};
-  assign T739 = T740;
-  assign T740 = op_0 | op_1;
-  assign T741 = exReg_aluOp_0_func == 4'b0110/* 0*/;
-  assign T742 = {31'h0/* 0*/, T743};
-  assign T743 = T744;
-  assign T744 = op_0 & op_1;
-  assign T745 = exReg_aluOp_0_func == 4'b0111/* 0*/;
-  assign T746 = {31'h0/* 0*/, T747};
-  assign T747 = T748;
-  assign T748 = ~ T749;
-  assign T749 = op_0 | op_1;
-  assign T750 = exReg_aluOp_0_func == 4'b1011/* 0*/;
-  assign T751 = {28'h0/* 0*/, T709};
-  assign T752 = exReg_aluOp_0_func == 4'b1100/* 0*/;
-  assign T753 = {28'h0/* 0*/, T709};
-  assign T754 = exReg_aluOp_0_func == 4'b1101/* 0*/;
-  assign T755 = T756;
-  assign T756 = T776 ? stackSpillReg : T757;
-  assign T757 = T775 ? stackTopReg : T758;
-  assign T758 = T774 ? mulHiReg : T759;
-  assign T759 = T773 ? mulLoReg : T760;
-  assign T760 = T772 ? T761 : 32'h0/* 0*/;
-  assign T761 = T762;
-  assign T762 = {24'h0/* 0*/, T763};
-  assign T763 = {T771, T770, T769, T768, T767, T766, T765, T764};
-  assign T764 = predReg_0;
-  assign T765 = predReg_1;
-  assign T766 = predReg_2;
-  assign T767 = predReg_3;
-  assign T768 = predReg_4;
-  assign T769 = predReg_5;
-  assign T770 = predReg_6;
-  assign T771 = predReg_7;
-  assign T772 = exReg_aluOp_0_func == 4'b0000/* 0*/;
-  assign T773 = exReg_aluOp_0_func == 4'b0010/* 0*/;
-  assign T774 = exReg_aluOp_0_func == 4'b0011/* 0*/;
-  assign T775 = exReg_aluOp_0_func == 4'b0110/* 0*/;
-  assign T776 = exReg_aluOp_0_func == 4'b0101/* 0*/;
-  assign T777 = T689;
+  assign T731 = T751 ? stackSpillReg : T732;
+  assign T732 = T750 ? stackTopReg : T733;
+  assign T733 = T749 ? mulHiReg : T734;
+  assign T734 = T748 ? mulLoReg : T735;
+  assign T735 = T747 ? T736 : 32'h0/* 0*/;
+  assign T736 = T737;
+  assign T737 = {24'h0/* 0*/, T738};
+  assign T738 = {T746, T745, T744, T743, T742, T741, T740, T739};
+  assign T739 = predReg_0;
+  assign T740 = predReg_1;
+  assign T741 = predReg_2;
+  assign T742 = predReg_3;
+  assign T743 = predReg_4;
+  assign T744 = predReg_5;
+  assign T745 = predReg_6;
+  assign T746 = predReg_7;
+  assign T747 = exReg_aluOp_0_func == 4'b0000/* 0*/;
+  assign T748 = exReg_aluOp_0_func == 4'b0010/* 0*/;
+  assign T749 = exReg_aluOp_0_func == 4'b0011/* 0*/;
+  assign T750 = exReg_aluOp_0_func == 4'b0110/* 0*/;
+  assign T751 = exReg_aluOp_0_func == 4'b0101/* 0*/;
+  assign T752 = T664;
   assign io_exmem_rd_0_addr = exReg_rdAddr_0;
-  assign T778 = T779;
-  assign T779 = {4'h0/* 0*/, 1'h0/* 0*/};
-  assign io_exdec_sp = T780;
-  assign T780 = T791 ? T790 : T781;
-  assign T781 = T662 ? T789 : T782;
-  assign T782 = T786 ? T785 : T783;
-  assign T783 = T669 ? T784 : stackTopReg;
-  assign T784 = op_1;
-  assign T785 = op_0;
-  assign T786 = T788 && T787;
-  assign T787 = exReg_aluOp_0_func == 4'b0110/* 0*/;
-  assign T788 = exReg_aluOp_0_isMTS && doExecute_0;
-  assign T789 = op_3;
-  assign T790 = op_2;
-  assign T791 = T793 && T792;
-  assign T792 = exReg_aluOp_1_func == 4'b0110/* 0*/;
-  assign T793 = exReg_aluOp_1_isMTS && doExecute_1;
+  assign T753 = T754;
+  assign T754 = {4'h0/* 0*/, 1'h0/* 0*/};
+  assign io_exdec_sp = T755;
+  assign T755 = T766 ? T765 : T756;
+  assign T756 = T637 ? T764 : T757;
+  assign T757 = T761 ? T760 : T758;
+  assign T758 = T644 ? T759 : stackTopReg;
+  assign T759 = op_1;
+  assign T760 = op_0;
+  assign T761 = T763 && T762;
+  assign T762 = exReg_aluOp_0_func == 4'b0110/* 0*/;
+  assign T763 = exReg_aluOp_0_isMTS && doExecute_0;
+  assign T764 = op_3;
+  assign T765 = op_2;
+  assign T766 = T768 && T767;
+  assign T767 = exReg_aluOp_1_func == 4'b0110/* 0*/;
+  assign T768 = exReg_aluOp_1_isMTS && doExecute_1;
 
   always @(posedge clk) begin
     if(reset) begin
@@ -5488,71 +5591,81 @@ module Execute(input clk, input reset,
     end
     if(reset) begin
       mulLHReg <= 32'h0/* 0*/;
-    end else if(T585) begin
-      mulLHReg <= T588;
+    end else if(io_ena) begin
+      mulLHReg <= T585;
+    end
+    if(reset) begin
+      signLHReg <= 1'h0/* 0*/;
+    end else if(io_ena) begin
+      signLHReg <= T597;
     end
     if(reset) begin
       mulHLReg <= 32'h0/* 0*/;
-    end else if(T606) begin
-      mulHLReg <= T607;
+    end else if(io_ena) begin
+      mulHLReg <= T600;
+    end
+    if(reset) begin
+      signHLReg <= 1'h0/* 0*/;
+    end else if(io_ena) begin
+      signHLReg <= T611;
     end
     if(reset) begin
       mulLLReg <= 32'h0/* 0*/;
-    end else if(T624) begin
-      mulLLReg <= T625;
+    end else if(io_ena) begin
+      mulLLReg <= T613;
     end
     if(reset) begin
       mulHHReg <= 32'h0/* 0*/;
-    end else if(T634) begin
-      mulHHReg <= T635;
+    end else if(io_ena) begin
+      mulHHReg <= T615;
     end
     if(reset) begin
       mulHiReg <= 32'h0/* 0*/;
-    end else if(T645) begin
-      mulHiReg <= T651;
+    end else if(T620) begin
+      mulHiReg <= T626;
     end
     if(reset) begin
       stackTopReg <= 32'h0/* 0*/;
-    end else if(T657) begin
-      stackTopReg <= T671;
+    end else if(T632) begin
+      stackTopReg <= T646;
     end
     if(reset) begin
-      exReg_aluOp_1_isSTC <= T663;
+      exReg_aluOp_1_isSTC <= T638;
     end else if(io_ena) begin
       exReg_aluOp_1_isSTC <= io_decex_aluOp_1_isSTC;
     end
     if(reset) begin
-      exReg_aluOp_0_isSTC <= T670;
+      exReg_aluOp_0_isSTC <= T645;
     end else if(io_ena) begin
       exReg_aluOp_0_isSTC <= io_decex_aluOp_0_isSTC;
     end
     if(reset) begin
       stackSpillReg <= 32'h0/* 0*/;
-    end else if(T679) begin
-      stackSpillReg <= T684;
+    end else if(T654) begin
+      stackSpillReg <= T659;
     end
     if(reset) begin
-      exReg_aluOp_1_isMFS <= T688;
+      exReg_aluOp_1_isMFS <= T663;
     end else if(io_ena) begin
       exReg_aluOp_1_isMFS <= io_decex_aluOp_1_isMFS;
     end
     if(reset) begin
-      exReg_rdAddr_1 <= T690;
+      exReg_rdAddr_1 <= T665;
     end else if(io_ena) begin
       exReg_rdAddr_1 <= io_decex_rdAddr_1;
     end
     if(reset) begin
-      exReg_wrRd_0 <= T693;
+      exReg_wrRd_0 <= T668;
     end else if(io_ena) begin
       exReg_wrRd_0 <= io_decex_wrRd_0;
     end
     if(reset) begin
-      exReg_aluOp_0_isMFS <= T777;
+      exReg_aluOp_0_isMFS <= T752;
     end else if(io_ena) begin
       exReg_aluOp_0_isMFS <= io_decex_aluOp_0_isMFS;
     end
     if(reset) begin
-      exReg_rdAddr_0 <= T778;
+      exReg_rdAddr_0 <= T753;
     end else if(io_ena) begin
       exReg_rdAddr_0 <= io_decex_rdAddr_0;
     end
@@ -5617,103 +5730,103 @@ module Memory(input clk, input reset,
     input [31:0] io_globalInOut_S_Data
 );
 
-  wire[1:0] T0;
-  wire[1:0] T1;
+  reg[29:0] memReg_pc;
+  wire T0;
+  wire enable;
+  wire T1;
   wire T2;
   wire T3;
-  wire[3:0] byteEn;
-  wire[3:0] T4;
-  wire[3:0] T5;
-  wire[3:0] T6;
-  wire[3:0] T7;
-  wire[3:0] T8;
-  wire[3:0] T9;
+  reg[0:0] mayStallReg;
+  wire T4;
+  wire[29:0] T5;
+  wire[29:0] T6;
+  wire[1:0] T7;
+  wire[1:0] T8;
+  wire T9;
   wire T10;
-  wire T11;
-  wire T12;
-  wire T13;
-  wire T14;
-  wire T15;
-  wire T16;
-  wire[1:0] T17;
+  wire[3:0] byteEn;
+  wire[3:0] T11;
+  wire[3:0] T12;
+  wire[3:0] T13;
+  wire[3:0] T14;
+  wire[3:0] T15;
+  wire[3:0] T16;
+  wire T17;
   wire T18;
   wire T19;
   wire T20;
   wire T21;
   wire T22;
   wire T23;
-  wire[31:0] T24;
+  wire[1:0] T24;
+  wire T25;
+  wire T26;
+  wire T27;
+  wire T28;
+  wire T29;
+  wire T30;
+  wire[31:0] T31;
   wire[7:0] wrData_0;
-  wire[7:0] T25;
-  wire[7:0] T26;
-  wire[7:0] T27;
-  wire[7:0] T28;
-  wire[7:0] T29;
-  wire[7:0] wrData_1;
-  wire[7:0] T30;
-  wire[7:0] T31;
   wire[7:0] T32;
   wire[7:0] T33;
   wire[7:0] T34;
-  wire[7:0] wrData_2;
   wire[7:0] T35;
   wire[7:0] T36;
+  wire[7:0] wrData_1;
   wire[7:0] T37;
   wire[7:0] T38;
   wire[7:0] T39;
-  wire[7:0] wrData_3;
   wire[7:0] T40;
   wire[7:0] T41;
+  wire[7:0] wrData_2;
   wire[7:0] T42;
   wire[7:0] T43;
   wire[7:0] T44;
-  wire[31:0] T45;
-  wire[29:0] T46;
-  wire[2:0] T47;
+  wire[7:0] T45;
+  wire[7:0] T46;
+  wire[7:0] wrData_3;
+  wire[7:0] T47;
+  wire[7:0] T48;
+  wire[7:0] T49;
+  wire[7:0] T50;
+  wire[7:0] T51;
+  wire[31:0] T52;
+  wire[29:0] T53;
+  wire[2:0] T54;
   wire[2:0] cmd;
-  wire[2:0] T48;
-  wire[2:0] T49;
-  wire T50;
-  wire T51;
-  wire enable;
-  wire T52;
-  wire T53;
-  wire T54;
-  reg[0:0] mayStallReg;
-  wire T55;
-  wire T56;
+  wire[2:0] T55;
+  wire[2:0] T56;
   wire T57;
-  wire[31:0] T58;
-  wire[31:0] T59;
-  wire[29:0] T60;
-  wire[2:0] T61;
-  wire T62;
-  wire[31:0] T63;
+  wire T58;
+  wire T59;
+  wire[31:0] T60;
+  wire[31:0] T61;
+  wire[29:0] T62;
+  wire[2:0] T63;
   wire T64;
-  wire[29:0] T65;
+  wire[31:0] T65;
+  wire T66;
+  wire[29:0] T67;
   reg[31:0] memReg_mem_callRetBase;
-  wire[31:0] T66;
-  wire[31:0] T67;
   wire[31:0] T68;
-  wire[29:0] T69;
-  reg[31:0] memReg_mem_callRetAddr;
+  wire[31:0] T69;
   wire[31:0] T70;
-  wire[31:0] T71;
+  wire[29:0] T71;
+  reg[31:0] memReg_mem_callRetAddr;
   wire[31:0] T72;
-  wire T73;
-  reg[0:0] memReg_mem_brcf;
-  wire T74;
+  wire[31:0] T73;
+  wire[31:0] T74;
   wire T75;
+  reg[0:0] memReg_mem_brcf;
   wire T76;
-  reg[0:0] memReg_mem_ret;
   wire T77;
   wire T78;
-  reg[0:0] memReg_mem_call;
+  reg[0:0] memReg_mem_ret;
   wire T79;
   wire T80;
-  reg[29:0] memReg_pc;
-  wire[29:0] T81;
-  wire[29:0] T82;
+  reg[0:0] memReg_mem_call;
+  wire T81;
+  wire T82;
   reg[0:0] memReg_rd_1_valid;
   wire T83;
   wire T84;
@@ -5799,118 +5912,118 @@ module Memory(input clk, input reset,
   reg[4:0] memReg_rd_0_addr;
   wire[4:0] T147;
 
-  assign io_globalInOut_M_AddrSpace = T0;
-  assign T0 = T3 ? 2'b00/* 0*/ : T1;
-  assign T1 = T2 ? 2'b10/* 0*/ : 2'b11/* 0*/;
-  assign T2 = io_exmem_mem_typ == 2'b10/* 0*/;
-  assign T3 = io_exmem_mem_typ == 2'b00/* 0*/;
+  assign io_memwb_pc = memReg_pc;
+  assign T0 = enable && io_ena_in;
+  assign enable = mayStallReg ? T1 : 1'h1/* 1*/;
+  assign T1 = T3 || T2;
+  assign T2 = io_globalInOut_S_Resp == 2'b01/* 0*/;
+  assign T3 = io_localInOut_S_Resp == 2'b01/* 0*/;
+  assign T4 = io_exmem_mem_load || io_exmem_mem_store;
+  assign T5 = T6;
+  assign T6 = {29'h0/* 0*/, 1'h0/* 0*/};
+  assign io_globalInOut_M_AddrSpace = T7;
+  assign T7 = T10 ? 2'b00/* 0*/ : T8;
+  assign T8 = T9 ? 2'b10/* 0*/ : 2'b11/* 0*/;
+  assign T9 = io_exmem_mem_typ == 2'b10/* 0*/;
+  assign T10 = io_exmem_mem_typ == 2'b00/* 0*/;
   assign io_globalInOut_M_ByteEn = byteEn;
-  assign byteEn = T4;
-  assign T4 = T22 ? 4'b0001/* 0*/ : T5;
-  assign T5 = T20 ? 4'b0010/* 0*/ : T6;
-  assign T6 = T18 ? 4'b0100/* 0*/ : T7;
-  assign T7 = T15 ? 4'b1000/* 0*/ : T8;
-  assign T8 = T13 ? 4'b0011/* 0*/ : T9;
-  assign T9 = T10 ? 4'b1100/* 0*/ : 4'b1111/* 0*/;
-  assign T10 = io_exmem_mem_hword && T11;
-  assign T11 = T12 == 1'b0/* 0*/;
-  assign T12 = io_exmem_mem_addr[1'h1/* 1*/:1'h1/* 1*/];
-  assign T13 = io_exmem_mem_hword && T14;
-  assign T14 = T12 == 1'b1/* 0*/;
-  assign T15 = io_exmem_mem_byte && T16;
-  assign T16 = T17 == 2'b00/* 0*/;
-  assign T17 = io_exmem_mem_addr[1'h1/* 1*/:1'h0/* 0*/];
-  assign T18 = io_exmem_mem_byte && T19;
-  assign T19 = T17 == 2'b01/* 0*/;
-  assign T20 = io_exmem_mem_byte && T21;
-  assign T21 = T17 == 2'b10/* 0*/;
+  assign byteEn = T11;
+  assign T11 = T29 ? 4'b0001/* 0*/ : T12;
+  assign T12 = T27 ? 4'b0010/* 0*/ : T13;
+  assign T13 = T25 ? 4'b0100/* 0*/ : T14;
+  assign T14 = T22 ? 4'b1000/* 0*/ : T15;
+  assign T15 = T20 ? 4'b0011/* 0*/ : T16;
+  assign T16 = T17 ? 4'b1100/* 0*/ : 4'b1111/* 0*/;
+  assign T17 = io_exmem_mem_hword && T18;
+  assign T18 = T19 == 1'b0/* 0*/;
+  assign T19 = io_exmem_mem_addr[1'h1/* 1*/:1'h1/* 1*/];
+  assign T20 = io_exmem_mem_hword && T21;
+  assign T21 = T19 == 1'b1/* 0*/;
   assign T22 = io_exmem_mem_byte && T23;
-  assign T23 = T17 == 2'b11/* 0*/;
-  assign io_globalInOut_M_Data = T24;
-  assign T24 = {wrData_3, wrData_2, wrData_1, wrData_0};
-  assign wrData_0 = T25;
-  assign T25 = T22 ? T29 : T26;
-  assign T26 = T13 ? T28 : T27;
-  assign T27 = io_exmem_mem_data[3'h7/* 7*/:1'h0/* 0*/];
-  assign T28 = io_exmem_mem_data[3'h7/* 7*/:1'h0/* 0*/];
-  assign T29 = io_exmem_mem_data[3'h7/* 7*/:1'h0/* 0*/];
-  assign wrData_1 = T30;
-  assign T30 = T20 ? T34 : T31;
-  assign T31 = T13 ? T33 : T32;
-  assign T32 = io_exmem_mem_data[4'hf/* 15*/:4'h8/* 8*/];
-  assign T33 = io_exmem_mem_data[4'hf/* 15*/:4'h8/* 8*/];
+  assign T23 = T24 == 2'b00/* 0*/;
+  assign T24 = io_exmem_mem_addr[1'h1/* 1*/:1'h0/* 0*/];
+  assign T25 = io_exmem_mem_byte && T26;
+  assign T26 = T24 == 2'b01/* 0*/;
+  assign T27 = io_exmem_mem_byte && T28;
+  assign T28 = T24 == 2'b10/* 0*/;
+  assign T29 = io_exmem_mem_byte && T30;
+  assign T30 = T24 == 2'b11/* 0*/;
+  assign io_globalInOut_M_Data = T31;
+  assign T31 = {wrData_3, wrData_2, wrData_1, wrData_0};
+  assign wrData_0 = T32;
+  assign T32 = T29 ? T36 : T33;
+  assign T33 = T20 ? T35 : T34;
   assign T34 = io_exmem_mem_data[3'h7/* 7*/:1'h0/* 0*/];
-  assign wrData_2 = T35;
-  assign T35 = T18 ? T39 : T36;
-  assign T36 = T10 ? T38 : T37;
-  assign T37 = io_exmem_mem_data[5'h17/* 23*/:5'h10/* 16*/];
-  assign T38 = io_exmem_mem_data[3'h7/* 7*/:1'h0/* 0*/];
-  assign T39 = io_exmem_mem_data[3'h7/* 7*/:1'h0/* 0*/];
-  assign wrData_3 = T40;
-  assign T40 = T15 ? T44 : T41;
-  assign T41 = T10 ? T43 : T42;
-  assign T42 = io_exmem_mem_data[5'h1f/* 31*/:5'h18/* 24*/];
-  assign T43 = io_exmem_mem_data[4'hf/* 15*/:4'h8/* 8*/];
-  assign T44 = io_exmem_mem_data[3'h7/* 7*/:1'h0/* 0*/];
-  assign io_globalInOut_M_Addr = T45;
-  assign T45 = {T46, 2'b00/* 0*/};
-  assign T46 = io_exmem_mem_addr[5'h1f/* 31*/:2'h2/* 2*/];
-  assign io_globalInOut_M_Cmd = T47;
-  assign T47 = T57 ? cmd : 3'b000/* 0*/;
-  assign cmd = T51 ? T48 : 3'b000/* 0*/;
-  assign T48 = io_exmem_mem_load ? 3'b010/* 0*/ : T49;
-  assign T49 = {2'h0/* 0*/, T50};
-  assign T50 = io_exmem_mem_store;
-  assign T51 = enable && io_ena_in;
-  assign enable = mayStallReg ? T52 : 1'h1/* 1*/;
-  assign T52 = T54 || T53;
-  assign T53 = io_globalInOut_S_Resp == 2'b01/* 0*/;
-  assign T54 = io_localInOut_S_Resp == 2'b01/* 0*/;
-  assign T55 = enable && io_ena_in;
-  assign T56 = io_exmem_mem_load || io_exmem_mem_store;
-  assign T57 = io_exmem_mem_typ != 2'b01/* 0*/;
+  assign T35 = io_exmem_mem_data[3'h7/* 7*/:1'h0/* 0*/];
+  assign T36 = io_exmem_mem_data[3'h7/* 7*/:1'h0/* 0*/];
+  assign wrData_1 = T37;
+  assign T37 = T27 ? T41 : T38;
+  assign T38 = T20 ? T40 : T39;
+  assign T39 = io_exmem_mem_data[4'hf/* 15*/:4'h8/* 8*/];
+  assign T40 = io_exmem_mem_data[4'hf/* 15*/:4'h8/* 8*/];
+  assign T41 = io_exmem_mem_data[3'h7/* 7*/:1'h0/* 0*/];
+  assign wrData_2 = T42;
+  assign T42 = T25 ? T46 : T43;
+  assign T43 = T17 ? T45 : T44;
+  assign T44 = io_exmem_mem_data[5'h17/* 23*/:5'h10/* 16*/];
+  assign T45 = io_exmem_mem_data[3'h7/* 7*/:1'h0/* 0*/];
+  assign T46 = io_exmem_mem_data[3'h7/* 7*/:1'h0/* 0*/];
+  assign wrData_3 = T47;
+  assign T47 = T22 ? T51 : T48;
+  assign T48 = T17 ? T50 : T49;
+  assign T49 = io_exmem_mem_data[5'h1f/* 31*/:5'h18/* 24*/];
+  assign T50 = io_exmem_mem_data[4'hf/* 15*/:4'h8/* 8*/];
+  assign T51 = io_exmem_mem_data[3'h7/* 7*/:1'h0/* 0*/];
+  assign io_globalInOut_M_Addr = T52;
+  assign T52 = {T53, 2'b00/* 0*/};
+  assign T53 = io_exmem_mem_addr[5'h1f/* 31*/:2'h2/* 2*/];
+  assign io_globalInOut_M_Cmd = T54;
+  assign T54 = T59 ? cmd : 3'b000/* 0*/;
+  assign cmd = T58 ? T55 : 3'b000/* 0*/;
+  assign T55 = io_exmem_mem_load ? 3'b010/* 0*/ : T56;
+  assign T56 = {2'h0/* 0*/, T57};
+  assign T57 = io_exmem_mem_store;
+  assign T58 = enable && io_ena_in;
+  assign T59 = io_exmem_mem_typ != 2'b01/* 0*/;
   assign io_localInOut_M_ByteEn = byteEn;
-  assign io_localInOut_M_Data = T58;
-  assign T58 = {wrData_3, wrData_2, wrData_1, wrData_0};
-  assign io_localInOut_M_Addr = T59;
-  assign T59 = {T60, 2'b00/* 0*/};
-  assign T60 = io_exmem_mem_addr[5'h1f/* 31*/:2'h2/* 2*/];
-  assign io_localInOut_M_Cmd = T61;
-  assign T61 = T62 ? cmd : 3'b000/* 0*/;
-  assign T62 = io_exmem_mem_typ == 2'b01/* 0*/;
+  assign io_localInOut_M_Data = T60;
+  assign T60 = {wrData_3, wrData_2, wrData_1, wrData_0};
+  assign io_localInOut_M_Addr = T61;
+  assign T61 = {T62, 2'b00/* 0*/};
+  assign T62 = io_exmem_mem_addr[5'h1f/* 31*/:2'h2/* 2*/];
+  assign io_localInOut_M_Cmd = T63;
+  assign T63 = T64 ? cmd : 3'b000/* 0*/;
+  assign T64 = io_exmem_mem_typ == 2'b01/* 0*/;
   assign io_exResult_1_valid = io_exmem_rd_1_valid;
   assign io_exResult_1_data = io_exmem_rd_1_data;
   assign io_exResult_1_addr = io_exmem_rd_1_addr;
   assign io_exResult_0_valid = io_exmem_rd_0_valid;
   assign io_exResult_0_data = io_exmem_rd_0_data;
   assign io_exResult_0_addr = io_exmem_rd_0_addr;
-  assign io_memfe_data = T63;
-  assign T63 = {wrData_3, wrData_2, wrData_1, wrData_0};
+  assign io_memfe_data = T65;
+  assign T65 = {wrData_3, wrData_2, wrData_1, wrData_0};
   assign io_memfe_addr = io_exmem_mem_addr;
-  assign io_memfe_store = T64;
-  assign T64 = io_localInOut_M_Cmd == 3'b001/* 0*/;
-  assign io_memfe_callRetBase = T65;
-  assign T65 = memReg_mem_callRetBase[5'h1f/* 31*/:2'h2/* 2*/];
-  assign T66 = T67;
-  assign T67 = T68;
-  assign T68 = {31'h0/* 0*/, 1'h0/* 0*/};
-  assign io_memfe_callRetPc = T69;
-  assign T69 = memReg_mem_callRetAddr[5'h1f/* 31*/:2'h2/* 2*/];
-  assign T70 = T71;
-  assign T71 = T72;
-  assign T72 = {31'h0/* 0*/, 1'h0/* 0*/};
-  assign io_memfe_doCallRet = T73;
-  assign T73 = T76 || memReg_mem_brcf;
-  assign T74 = T75;
-  assign T75 = 1'h0/* 0*/;
-  assign T76 = memReg_mem_call || memReg_mem_ret;
-  assign T77 = T78;
-  assign T78 = 1'h0/* 0*/;
+  assign io_memfe_store = T66;
+  assign T66 = io_localInOut_M_Cmd == 3'b001/* 0*/;
+  assign io_memfe_callRetBase = T67;
+  assign T67 = memReg_mem_callRetBase[5'h1f/* 31*/:2'h2/* 2*/];
+  assign T68 = T69;
+  assign T69 = T70;
+  assign T70 = {31'h0/* 0*/, 1'h0/* 0*/};
+  assign io_memfe_callRetPc = T71;
+  assign T71 = memReg_mem_callRetAddr[5'h1f/* 31*/:2'h2/* 2*/];
+  assign T72 = T73;
+  assign T73 = T74;
+  assign T74 = {31'h0/* 0*/, 1'h0/* 0*/};
+  assign io_memfe_doCallRet = T75;
+  assign T75 = T78 || memReg_mem_brcf;
+  assign T76 = T77;
+  assign T77 = 1'h0/* 0*/;
+  assign T78 = memReg_mem_call || memReg_mem_ret;
   assign T79 = T80;
   assign T80 = 1'h0/* 0*/;
-  assign io_memwb_pc = memReg_pc;
   assign T81 = T82;
-  assign T82 = {29'h0/* 0*/, 1'h0/* 0*/};
+  assign T82 = 1'h0/* 0*/;
   assign io_memwb_rd_1_valid = memReg_rd_1_valid;
   assign T83 = T84;
   assign T84 = 1'h0/* 0*/;
@@ -5993,98 +6106,98 @@ module Memory(input clk, input reset,
 
   always @(posedge clk) begin
     if(reset) begin
-      mayStallReg <= 1'h0/* 0*/;
-    end else if(T55) begin
-      mayStallReg <= T56;
-    end
-    if(reset) begin
-      memReg_mem_callRetBase <= T66;
-    end else if(T55) begin
-      memReg_mem_callRetBase <= io_exmem_mem_callRetBase;
-    end
-    if(reset) begin
-      memReg_mem_callRetAddr <= T70;
-    end else if(T55) begin
-      memReg_mem_callRetAddr <= io_exmem_mem_callRetAddr;
-    end
-    if(reset) begin
-      memReg_mem_brcf <= T74;
-    end else if(T55) begin
-      memReg_mem_brcf <= io_exmem_mem_brcf;
-    end
-    if(reset) begin
-      memReg_mem_ret <= T77;
-    end else if(T55) begin
-      memReg_mem_ret <= io_exmem_mem_ret;
-    end
-    if(reset) begin
-      memReg_mem_call <= T79;
-    end else if(T55) begin
-      memReg_mem_call <= io_exmem_mem_call;
-    end
-    if(reset) begin
-      memReg_pc <= T81;
-    end else if(T55) begin
+      memReg_pc <= T5;
+    end else if(T0) begin
       memReg_pc <= io_exmem_pc;
     end
     if(reset) begin
+      mayStallReg <= 1'h0/* 0*/;
+    end else if(T0) begin
+      mayStallReg <= T4;
+    end
+    if(reset) begin
+      memReg_mem_callRetBase <= T68;
+    end else if(T0) begin
+      memReg_mem_callRetBase <= io_exmem_mem_callRetBase;
+    end
+    if(reset) begin
+      memReg_mem_callRetAddr <= T72;
+    end else if(T0) begin
+      memReg_mem_callRetAddr <= io_exmem_mem_callRetAddr;
+    end
+    if(reset) begin
+      memReg_mem_brcf <= T76;
+    end else if(T0) begin
+      memReg_mem_brcf <= io_exmem_mem_brcf;
+    end
+    if(reset) begin
+      memReg_mem_ret <= T79;
+    end else if(T0) begin
+      memReg_mem_ret <= io_exmem_mem_ret;
+    end
+    if(reset) begin
+      memReg_mem_call <= T81;
+    end else if(T0) begin
+      memReg_mem_call <= io_exmem_mem_call;
+    end
+    if(reset) begin
       memReg_rd_1_valid <= T83;
-    end else if(T55) begin
+    end else if(T0) begin
       memReg_rd_1_valid <= io_exmem_rd_1_valid;
     end
     if(reset) begin
       memReg_rd_1_data <= T85;
-    end else if(T55) begin
+    end else if(T0) begin
       memReg_rd_1_data <= io_exmem_rd_1_data;
     end
     if(reset) begin
       memReg_rd_1_addr <= T88;
-    end else if(T55) begin
+    end else if(T0) begin
       memReg_rd_1_addr <= io_exmem_rd_1_addr;
     end
     if(reset) begin
       memReg_rd_0_valid <= T91;
-    end else if(T55) begin
+    end else if(T0) begin
       memReg_rd_0_valid <= io_exmem_rd_0_valid;
     end
     if(reset) begin
       memReg_rd_0_data <= T94;
-    end else if(T55) begin
+    end else if(T0) begin
       memReg_rd_0_data <= io_exmem_rd_0_data;
     end
     if(reset) begin
       memReg_mem_typ <= T105;
-    end else if(T55) begin
+    end else if(T0) begin
       memReg_mem_typ <= io_exmem_mem_typ;
     end
     if(reset) begin
       memReg_mem_addr <= T117;
-    end else if(T55) begin
+    end else if(T0) begin
       memReg_mem_addr <= io_exmem_mem_addr;
     end
     if(reset) begin
       memReg_mem_byte <= T125;
-    end else if(T55) begin
+    end else if(T0) begin
       memReg_mem_byte <= io_exmem_mem_byte;
     end
     if(reset) begin
       memReg_mem_zext <= T129;
-    end else if(T55) begin
+    end else if(T0) begin
       memReg_mem_zext <= io_exmem_mem_zext;
     end
     if(reset) begin
       memReg_mem_hword <= T141;
-    end else if(T55) begin
+    end else if(T0) begin
       memReg_mem_hword <= io_exmem_mem_hword;
     end
     if(reset) begin
       memReg_mem_load <= T145;
-    end else if(T55) begin
+    end else if(T0) begin
       memReg_mem_load <= io_exmem_mem_load;
     end
     if(reset) begin
       memReg_rd_0_addr <= T147;
-    end else if(T55) begin
+    end else if(T0) begin
       memReg_rd_0_addr <= io_exmem_rd_0_addr;
     end
   end
@@ -6128,6 +6241,33 @@ module WriteBack(
   assign io_rfWrite_0_addr = io_memwb_rd_0_addr;
 endmodule
 
+module MemBlock_2(input clk,
+    input [8:0] io_rdAddr,
+    output[7:0] io_rdData,
+    input [8:0] io_wrAddr,
+    input  io_wrEna,
+    input [7:0] io_wrData
+);
+
+  wire[7:0] T0;
+  reg [7:0] mem [511:0];
+  wire[8:0] T1;
+  wire[7:0] T2;
+  wire T3;
+  reg[8:0] R4;
+
+  assign io_rdData = T0;
+  assign T0 = mem[R4];
+  assign T2 = io_wrData;
+  assign T3 = io_wrEna == 1'h1/* 1*/;
+
+  always @(posedge clk) begin
+    if (T3)
+      mem[io_wrAddr] <= T2;
+    R4 <= io_rdAddr;
+  end
+endmodule
+
 module Spm(input clk,
     input [2:0] io_M_Cmd,
     input [10:0] io_M_Addr,
@@ -6137,99 +6277,97 @@ module Spm(input clk,
     output[31:0] io_S_Data
 );
 
-  wire[31:0] rdData;
   wire[7:0] T0;
-  reg [7:0] mem0 [511:0];
-  wire[8:0] T1;
-  wire[7:0] T2;
-  wire[7:0] T3;
-  reg[31:0] masterReg_Data;
-  wire T4;
-  reg[3:0] stmskReg;
+  wire T1;
   wire[3:0] stmsk;
-  wire T5;
-  wire[8:0] T6;
-  reg[10:0] masterReg_Addr;
+  wire T2;
+  wire[8:0] T3;
+  wire[8:0] T4;
+  wire[7:0] T5;
+  wire T6;
   wire[8:0] T7;
-  wire[7:0] T8;
-  reg [7:0] mem1 [511:0];
-  wire[8:0] T9;
-  wire[7:0] T10;
-  wire[7:0] T11;
-  wire T12;
-  wire[8:0] T13;
-  wire[8:0] T14;
-  wire[7:0] T15;
-  reg [7:0] mem2 [511:0];
+  wire[8:0] T8;
+  wire[7:0] T9;
+  wire T10;
+  wire[8:0] T11;
+  wire[8:0] T12;
+  wire[7:0] T13;
+  wire T14;
+  wire[8:0] T15;
   wire[8:0] T16;
-  wire[7:0] T17;
-  wire[7:0] T18;
-  wire T19;
-  wire[8:0] T20;
-  wire[8:0] T21;
-  wire[7:0] T22;
-  reg [7:0] mem3 [511:0];
-  wire[8:0] T23;
-  wire[7:0] T24;
-  wire[7:0] T25;
-  wire T26;
-  wire[8:0] T27;
-  wire[8:0] T28;
-  wire[1:0] T29;
-  wire T30;
-  wire T31;
-  wire T32;
-  reg[2:0] masterReg_Cmd;
-  wire T33;
+  wire[31:0] rdData;
+  wire[23:0] T17;
+  wire[15:0] T18;
+  wire[7:0] MemBlock_0_io_rdData;
+  wire[7:0] MemBlock_1_io_rdData;
+  wire[7:0] MemBlock_2_io_rdData;
+  wire[7:0] MemBlock_3_io_rdData;
+  wire[1:0] T19;
+  wire T20;
+  wire T21;
+  wire T22;
+  reg[2:0] cmdReg;
+  wire T23;
 
+  assign T0 = io_M_Data[5'h1f/* 31*/:5'h18/* 24*/];
+  assign T1 = stmsk[2'h3/* 3*/:2'h3/* 3*/];
+  assign stmsk = T2 ? io_M_ByteEn : 4'b0000/* 0*/;
+  assign T2 = io_M_Cmd == 3'b001/* 0*/;
+  assign T3 = io_M_Addr[4'ha/* 10*/:2'h2/* 2*/];
+  assign T4 = io_M_Addr[4'ha/* 10*/:2'h2/* 2*/];
+  assign T5 = io_M_Data[5'h17/* 23*/:5'h10/* 16*/];
+  assign T6 = stmsk[2'h2/* 2*/:2'h2/* 2*/];
+  assign T7 = io_M_Addr[4'ha/* 10*/:2'h2/* 2*/];
+  assign T8 = io_M_Addr[4'ha/* 10*/:2'h2/* 2*/];
+  assign T9 = io_M_Data[4'hf/* 15*/:4'h8/* 8*/];
+  assign T10 = stmsk[1'h1/* 1*/:1'h1/* 1*/];
+  assign T11 = io_M_Addr[4'ha/* 10*/:2'h2/* 2*/];
+  assign T12 = io_M_Addr[4'ha/* 10*/:2'h2/* 2*/];
+  assign T13 = io_M_Data[3'h7/* 7*/:1'h0/* 0*/];
+  assign T14 = stmsk[1'h0/* 0*/:1'h0/* 0*/];
+  assign T15 = io_M_Addr[4'ha/* 10*/:2'h2/* 2*/];
+  assign T16 = io_M_Addr[4'ha/* 10*/:2'h2/* 2*/];
   assign io_S_Data = rdData;
-  assign rdData = {T22, T15, T8, T0};
-  assign T0 = mem0[T7];
-  assign T2 = T3;
-  assign T3 = masterReg_Data[3'h7/* 7*/:1'h0/* 0*/];
-  assign T4 = stmskReg[1'h0/* 0*/:1'h0/* 0*/];
-  assign stmsk = T5 ? io_M_ByteEn : 4'b0000/* 0*/;
-  assign T5 = io_M_Cmd == 3'b001/* 0*/;
-  assign T6 = masterReg_Addr[4'ha/* 10*/:2'h2/* 2*/];
-  assign T7 = masterReg_Addr[4'ha/* 10*/:2'h2/* 2*/];
-  assign T8 = mem1[T14];
-  assign T10 = T11;
-  assign T11 = masterReg_Data[4'hf/* 15*/:4'h8/* 8*/];
-  assign T12 = stmskReg[1'h1/* 1*/:1'h1/* 1*/];
-  assign T13 = masterReg_Addr[4'ha/* 10*/:2'h2/* 2*/];
-  assign T14 = masterReg_Addr[4'ha/* 10*/:2'h2/* 2*/];
-  assign T15 = mem2[T21];
-  assign T17 = T18;
-  assign T18 = masterReg_Data[5'h17/* 23*/:5'h10/* 16*/];
-  assign T19 = stmskReg[2'h2/* 2*/:2'h2/* 2*/];
-  assign T20 = masterReg_Addr[4'ha/* 10*/:2'h2/* 2*/];
-  assign T21 = masterReg_Addr[4'ha/* 10*/:2'h2/* 2*/];
-  assign T22 = mem3[T28];
-  assign T24 = T25;
-  assign T25 = masterReg_Data[5'h1f/* 31*/:5'h18/* 24*/];
-  assign T26 = stmskReg[2'h3/* 3*/:2'h3/* 3*/];
-  assign T27 = masterReg_Addr[4'ha/* 10*/:2'h2/* 2*/];
-  assign T28 = masterReg_Addr[4'ha/* 10*/:2'h2/* 2*/];
-  assign io_S_Resp = T29;
-  assign T29 = {1'h0/* 0*/, T30};
-  assign T30 = T31;
-  assign T31 = T33 || T32;
-  assign T32 = masterReg_Cmd == 3'b010/* 0*/;
-  assign T33 = masterReg_Cmd == 3'b001/* 0*/;
+  assign rdData = {MemBlock_3_io_rdData, T17};
+  assign T17 = {MemBlock_2_io_rdData, T18};
+  assign T18 = {MemBlock_1_io_rdData, MemBlock_0_io_rdData};
+  assign io_S_Resp = T19;
+  assign T19 = {1'h0/* 0*/, T20};
+  assign T20 = T21;
+  assign T21 = T23 || T22;
+  assign T22 = cmdReg == 3'b010/* 0*/;
+  assign T23 = cmdReg == 3'b001/* 0*/;
+  MemBlock_2 MemBlock_0(.clk(clk),
+       .io_rdAddr( T16 ),
+       .io_rdData( MemBlock_0_io_rdData ),
+       .io_wrAddr( T15 ),
+       .io_wrEna( T14 ),
+       .io_wrData( T13 )
+  );
+  MemBlock_2 MemBlock_1(.clk(clk),
+       .io_rdAddr( T12 ),
+       .io_rdData( MemBlock_1_io_rdData ),
+       .io_wrAddr( T11 ),
+       .io_wrEna( T10 ),
+       .io_wrData( T9 )
+  );
+  MemBlock_2 MemBlock_2(.clk(clk),
+       .io_rdAddr( T8 ),
+       .io_rdData( MemBlock_2_io_rdData ),
+       .io_wrAddr( T7 ),
+       .io_wrEna( T6 ),
+       .io_wrData( T5 )
+  );
+  MemBlock_2 MemBlock_3(.clk(clk),
+       .io_rdAddr( T4 ),
+       .io_rdData( MemBlock_3_io_rdData ),
+       .io_wrAddr( T3 ),
+       .io_wrEna( T1 ),
+       .io_wrData( T0 )
+  );
 
   always @(posedge clk) begin
-    if (T4)
-      mem0[T6] <= T2;
-    masterReg_Data <= io_M_Data;
-    stmskReg <= stmsk;
-    masterReg_Addr <= io_M_Addr;
-    if (T12)
-      mem1[T13] <= T10;
-    if (T19)
-      mem2[T20] <= T17;
-    if (T26)
-      mem3[T27] <= T24;
-    masterReg_Cmd <= io_M_Cmd;
+    cmdReg <= io_M_Cmd;
   end
 endmodule
 
@@ -6325,7 +6463,7 @@ module CpuInfo(input clk,
   assign T4 = T5 == 1'h0/* 0*/;
   assign T5 = masterReg_Addr[2'h2/* 2*/:2'h2/* 2*/];
   assign T6 = masterReg_Cmd == 3'b010/* 0*/;
-  assign T7 = {5'h0/* 0*/, 27'h4c4b400/* 80000000*/};
+  assign T7 = {5'h0/* 0*/, 27'h5f5e100/* 100000000*/};
   assign T8 = T6 && T9;
   assign T9 = ! T4;
   assign io_ocp_S_Resp = resp;
@@ -6411,7 +6549,7 @@ module Timer(input clk, input reset,
   assign T14 = T15 == 2'b00/* 0*/;
   assign T15 = masterReg_Addr[2'h3/* 3*/:2'h2/* 2*/];
   assign T16 = usecReg[5'h1f/* 31*/:1'h0/* 0*/];
-  assign T17 = T18 == 7'h50/* 80*/;
+  assign T17 = T18 == 7'h64/* 100*/;
   assign T18 = {6'h0/* 0*/, usecSubReg};
   assign T19 = T17 ? 1'h0/* 0*/ : T20;
   assign T20 = usecSubReg + 1'h1/* 1*/;
@@ -6624,7 +6762,7 @@ module Uart(input clk, input reset,
   assign T11 = tx_baud_tick == 1'h1/* 1*/;
   assign T12 = T14 || T13;
   assign T13 = ! T14;
-  assign T14 = tx_baud_counter == 10'h2b6/* 694*/;
+  assign T14 = tx_baud_counter == 10'h364/* 868*/;
   assign T15 = T14 || T13;
   assign T16 = T13 ? T18 : T17;
   assign T17 = {9'h0/* 0*/, 1'h0/* 0*/};
@@ -6673,7 +6811,7 @@ module Uart(input clk, input reset,
   assign T59 = T97 || T60;
   assign T60 = rx_enable && T61;
   assign T61 = ! T62;
-  assign T62 = rx_baud_counter == 10'h2b6/* 694*/;
+  assign T62 = rx_baud_counter == 10'h364/* 868*/;
   assign T63 = T96 || T64;
   assign T64 = T66 && T65;
   assign T65 = rxd_reg2 == 1'h0/* 0*/;
@@ -6718,7 +6856,7 @@ module Uart(input clk, input reset,
   assign T104 = {9'h0/* 0*/, 1'h0/* 0*/};
   assign T105 = rx_baud_counter + T106;
   assign T106 = {9'h0/* 0*/, 1'h1/* 1*/};
-  assign T107 = 10'h2b6/* 694*/ / 2'h2/* 2*/;
+  assign T107 = 10'h364/* 868*/ / 2'h2/* 2*/;
   assign T108 = T60 ? 1'h0/* 0*/ : 1'h1/* 1*/;
   assign T109 = rx_state == 2'h3/* 3*/;
   assign T110 = {rxd_reg2, T111};
@@ -7701,7 +7839,6 @@ module OcpBurstBus(
 endmodule
 
 module PatmosCore(input clk, input reset,
-    output[31:0] io_dummy,
     output[2:0] io_comConf_M_Cmd,
     output[31:0] io_comConf_M_Addr,
     output[31:0] io_comConf_M_Data,
@@ -7731,6 +7868,10 @@ module PatmosCore(input clk, input reset,
     output[8:0] io_ledsPins_led
 );
 
+  reg[0:0] enableReg;
+  wire enable;
+  wire mcache_io_ena_out;
+  wire memory_io_ena_out;
   wire[3:0] T0;
   wire[3:0] mcache_io_ocp_port_M_DataByteEn;
   wire[3:0] cacheToBurstBus_io_master_M_DataByteEn;
@@ -7853,9 +7994,6 @@ module PatmosCore(input clk, input reset,
   wire memory_io_memwb_rd_0_valid;
   wire[31:0] memory_io_memwb_rd_0_data;
   wire[4:0] memory_io_memwb_rd_0_addr;
-  wire enable;
-  wire mcache_io_ena_out;
-  wire memory_io_ena_out;
   wire[31:0] bootMem_io_memInOut_S_Data;
   wire[1:0] bootMem_io_memInOut_S_Resp;
   wire[31:0] iocomp_io_memInOut_S_Data;
@@ -7959,12 +8097,12 @@ module PatmosCore(input clk, input reset,
   wire[29:0] fetch_io_fedec_pc;
   wire[31:0] fetch_io_fedec_instr_b;
   wire[31:0] fetch_io_fedec_instr_a;
-  wire[1:0] mcache_io_mcachefe_mem_sel;
+  wire[1:0] mcache_io_mcachefe_memSel;
   wire[31:0] mcache_io_mcachefe_reloc;
   wire[11:0] mcache_io_mcachefe_relPc;
   wire[10:0] mcache_io_mcachefe_relBase;
-  wire[31:0] mcache_io_mcachefe_instr_b;
-  wire[31:0] mcache_io_mcachefe_instr_a;
+  wire[31:0] mcache_io_mcachefe_instrOdd;
+  wire[31:0] mcache_io_mcachefe_instrEven;
   wire[31:0] memory_io_memfe_data;
   wire[31:0] memory_io_memfe_addr;
   wire memory_io_memfe_store;
@@ -7977,10 +8115,8 @@ module PatmosCore(input clk, input reset,
   wire[31:0] execute_io_exmcache_callRetAddr;
   wire[31:0] execute_io_exmcache_callRetBase;
   wire execute_io_exmcache_doCallRet;
-  wire[31:0] fetch_io_femcache_callRetBase;
-  wire fetch_io_femcache_doCallRet;
-  wire fetch_io_femcache_request;
-  wire[31:0] fetch_io_femcache_address;
+  wire[31:0] fetch_io_femcache_addrOdd;
+  wire[31:0] fetch_io_femcache_addrEven;
   wire[8:0] iocomp_io_ledsPins_led;
   wire iocomp_io_uartPins_tx;
   wire[3:0] burstBus_io_master_M_DataByteEn;
@@ -7997,12 +8133,8 @@ module PatmosCore(input clk, input reset,
   wire[31:0] iocomp_io_comConf_M_Data;
   wire[31:0] iocomp_io_comConf_M_Addr;
   wire[2:0] iocomp_io_comConf_M_Cmd;
-  wire[31:0] T85;
-  wire[29:0] T86;
-  wire[29:0] T87;
-  reg[0:0] enableReg;
-  reg[29:0] R88;
 
+  assign enable = memory_io_ena_out & mcache_io_ena_out;
   assign T0 = T1 ? cacheToBurstBus_io_master_M_DataByteEn : mcache_io_ocp_port_M_DataByteEn;
   assign T1 = T5 ? 1'h0/* 0*/ : T2;
   assign T2 = T4 ? 1'h1/* 1*/ : R3;
@@ -8077,7 +8209,6 @@ module PatmosCore(input clk, input reset,
   assign T80 = T43 ? R82 : T81;
   assign T81 = T36 ? 2'b00/* 0*/ : cacheToBurstBus_io_slave_S_Resp;
   assign T83 = 2'b00/* 0*/;
-  assign enable = memory_io_ena_out & mcache_io_ena_out;
   assign T84 = T1 ? 2'b00/* 0*/ : burstBus_io_slave_S_Resp;
   assign io_ledsPins_led = iocomp_io_ledsPins_led;
   assign io_uartPins_tx = iocomp_io_uartPins_tx;
@@ -8095,26 +8226,20 @@ module PatmosCore(input clk, input reset,
   assign io_comConf_M_Data = iocomp_io_comConf_M_Data;
   assign io_comConf_M_Addr = iocomp_io_comConf_M_Addr;
   assign io_comConf_M_Cmd = iocomp_io_comConf_M_Cmd;
-  assign io_dummy = T85;
-  assign T85 = {2'h0/* 0*/, T86};
-  assign T86 = R88 | T87;
-  assign T87 = {29'h0/* 0*/, enableReg};
   MCache mcache(.clk(clk), .reset(reset),
        .io_ena_out( mcache_io_ena_out ),
        .io_ena_in( memory_io_ena_out ),
-       .io_femcache_address( fetch_io_femcache_address ),
-       .io_femcache_request( fetch_io_femcache_request ),
-       .io_femcache_doCallRet( fetch_io_femcache_doCallRet ),
-       .io_femcache_callRetBase( fetch_io_femcache_callRetBase ),
+       .io_femcache_addrEven( fetch_io_femcache_addrEven ),
+       .io_femcache_addrOdd( fetch_io_femcache_addrOdd ),
        .io_exmcache_doCallRet( execute_io_exmcache_doCallRet ),
        .io_exmcache_callRetBase( execute_io_exmcache_callRetBase ),
        .io_exmcache_callRetAddr( execute_io_exmcache_callRetAddr ),
-       .io_mcachefe_instr_a( mcache_io_mcachefe_instr_a ),
-       .io_mcachefe_instr_b( mcache_io_mcachefe_instr_b ),
+       .io_mcachefe_instrEven( mcache_io_mcachefe_instrEven ),
+       .io_mcachefe_instrOdd( mcache_io_mcachefe_instrOdd ),
        .io_mcachefe_relBase( mcache_io_mcachefe_relBase ),
        .io_mcachefe_relPc( mcache_io_mcachefe_relPc ),
        .io_mcachefe_reloc( mcache_io_mcachefe_reloc ),
-       .io_mcachefe_mem_sel( mcache_io_mcachefe_mem_sel ),
+       .io_mcachefe_memSel( mcache_io_mcachefe_memSel ),
        .io_ocp_port_M_Cmd( mcache_io_ocp_port_M_Cmd ),
        .io_ocp_port_M_Addr( mcache_io_ocp_port_M_Addr ),
        .io_ocp_port_M_Data( mcache_io_ocp_port_M_Data ),
@@ -8140,16 +8265,14 @@ module PatmosCore(input clk, input reset,
        .io_memfe_store( memory_io_memfe_store ),
        .io_memfe_addr( memory_io_memfe_addr ),
        .io_memfe_data( memory_io_memfe_data ),
-       .io_femcache_address( fetch_io_femcache_address ),
-       .io_femcache_request( fetch_io_femcache_request ),
-       .io_femcache_doCallRet( fetch_io_femcache_doCallRet ),
-       .io_femcache_callRetBase( fetch_io_femcache_callRetBase ),
-       .io_mcachefe_instr_a( mcache_io_mcachefe_instr_a ),
-       .io_mcachefe_instr_b( mcache_io_mcachefe_instr_b ),
+       .io_femcache_addrEven( fetch_io_femcache_addrEven ),
+       .io_femcache_addrOdd( fetch_io_femcache_addrOdd ),
+       .io_mcachefe_instrEven( mcache_io_mcachefe_instrEven ),
+       .io_mcachefe_instrOdd( mcache_io_mcachefe_instrOdd ),
        .io_mcachefe_relBase( mcache_io_mcachefe_relBase ),
        .io_mcachefe_relPc( mcache_io_mcachefe_relPc ),
        .io_mcachefe_reloc( mcache_io_mcachefe_reloc ),
-       .io_mcachefe_mem_sel( mcache_io_mcachefe_mem_sel )
+       .io_mcachefe_memSel( mcache_io_mcachefe_memSel )
   );
   Decode decode(.clk(clk), .reset(reset),
        .io_ena( enable ),
@@ -8479,6 +8602,7 @@ module PatmosCore(input clk, input reset,
   );
 
   always @(posedge clk) begin
+    enableReg <= enable;
     R3 <= reset ? 1'h0/* 0*/ : T1;
     if(reset) begin
       R14 <= T53;
@@ -8525,13 +8649,43 @@ module PatmosCore(input clk, input reset,
     end else if(T76) begin
       R82 <= cacheToBurstBus_io_slave_S_Resp;
     end
-    enableReg <= enable;
-    R88 <= memory_io_memwb_pc;
   end
 endmodule
 
+module MemBridge(
+    input [2:0] io_ocp_M_Cmd,
+    input [31:0] io_ocp_M_Addr,
+    input [31:0] io_ocp_M_Data,
+    input  io_ocp_M_DataValid,
+    input [3:0] io_ocp_M_DataByteEn,
+    output[1:0] io_ocp_S_Resp,
+    output[31:0] io_ocp_S_Data,
+    output io_ocp_S_CmdAccept,
+    output io_ocp_S_DataAccept,
+    output[2:0] io_memBridgePins_M_Cmd,
+    output[31:0] io_memBridgePins_M_Addr,
+    output[31:0] io_memBridgePins_M_Data,
+    output io_memBridgePins_M_DataValid,
+    output[3:0] io_memBridgePins_M_DataByteEn,
+    input [1:0] io_memBridgePins_S_Resp,
+    input [31:0] io_memBridgePins_S_Data,
+    input  io_memBridgePins_S_CmdAccept,
+    input  io_memBridgePins_S_DataAccept
+);
+
+
+  assign io_memBridgePins_M_DataByteEn = io_ocp_M_DataByteEn;
+  assign io_memBridgePins_M_DataValid = io_ocp_M_DataValid;
+  assign io_memBridgePins_M_Data = io_ocp_M_Data;
+  assign io_memBridgePins_M_Addr = io_ocp_M_Addr;
+  assign io_memBridgePins_M_Cmd = io_ocp_M_Cmd;
+  assign io_ocp_S_DataAccept = io_memBridgePins_S_DataAccept;
+  assign io_ocp_S_CmdAccept = io_memBridgePins_S_CmdAccept;
+  assign io_ocp_S_Data = io_memBridgePins_S_Data;
+  assign io_ocp_S_Resp = io_memBridgePins_S_Resp;
+endmodule
+
 module Patmos(input clk, input reset,
-    output[31:0] io_dummy,
     output[2:0] io_comConf_M_Cmd,
     output[31:0] io_comConf_M_Addr,
     output[31:0] io_comConf_M_Data,
@@ -8546,28 +8700,37 @@ module Patmos(input clk, input reset,
     output[3:0] io_comSpm_M_ByteEn,
     input [1:0] io_comSpm_S_Resp,
     input [31:0] io_comSpm_S_Data,
-    output[2:0] io_mem_interface_M_Cmd,
-    output[31:0] io_mem_interface_M_Addr,
-    output[31:0] io_mem_interface_M_Data,
-    output io_mem_interface_M_DataValid,
-    output[3:0] io_mem_interface_M_DataByteEn,
-    input [1:0] io_mem_interface_S_Resp,
-    input [31:0] io_mem_interface_S_Data,
-    input  io_mem_interface_S_CmdAccept,
-    input  io_mem_interface_S_DataAccept,
+    output[2:0] io_memBridgePins_M_Cmd,
+    output[31:0] io_memBridgePins_M_Addr,
+    output[31:0] io_memBridgePins_M_Data,
+    output io_memBridgePins_M_DataValid,
+    output[3:0] io_memBridgePins_M_DataByteEn,
+    input [1:0] io_memBridgePins_S_Resp,
+    input [31:0] io_memBridgePins_S_Data,
+    input  io_memBridgePins_S_CmdAccept,
+    input  io_memBridgePins_S_DataAccept,
     input [31:0] io_cpuInfoPins_id,
     output io_uartPins_tx,
     input  io_uartPins_rx,
     output[8:0] io_ledsPins_led
 );
 
-  wire[8:0] core_io_ledsPins_led;
-  wire core_io_uartPins_tx;
   wire[3:0] core_io_memPort_M_DataByteEn;
   wire core_io_memPort_M_DataValid;
   wire[31:0] core_io_memPort_M_Data;
   wire[31:0] core_io_memPort_M_Addr;
   wire[2:0] core_io_memPort_M_Cmd;
+  wire sramCtrl_io_ocp_S_DataAccept;
+  wire sramCtrl_io_ocp_S_CmdAccept;
+  wire[31:0] sramCtrl_io_ocp_S_Data;
+  wire[1:0] sramCtrl_io_ocp_S_Resp;
+  wire[8:0] core_io_ledsPins_led;
+  wire core_io_uartPins_tx;
+  wire[3:0] sramCtrl_io_memBridgePins_M_DataByteEn;
+  wire sramCtrl_io_memBridgePins_M_DataValid;
+  wire[31:0] sramCtrl_io_memBridgePins_M_Data;
+  wire[31:0] sramCtrl_io_memBridgePins_M_Addr;
+  wire[2:0] sramCtrl_io_memBridgePins_M_Cmd;
   wire[3:0] core_io_comSpm_M_ByteEn;
   wire[31:0] core_io_comSpm_M_Data;
   wire[31:0] core_io_comSpm_M_Addr;
@@ -8577,15 +8740,14 @@ module Patmos(input clk, input reset,
   wire[31:0] core_io_comConf_M_Data;
   wire[31:0] core_io_comConf_M_Addr;
   wire[2:0] core_io_comConf_M_Cmd;
-  wire[31:0] core_io_dummy;
 
   assign io_ledsPins_led = core_io_ledsPins_led;
   assign io_uartPins_tx = core_io_uartPins_tx;
-  assign io_mem_interface_M_DataByteEn = core_io_memPort_M_DataByteEn;
-  assign io_mem_interface_M_DataValid = core_io_memPort_M_DataValid;
-  assign io_mem_interface_M_Data = core_io_memPort_M_Data;
-  assign io_mem_interface_M_Addr = core_io_memPort_M_Addr;
-  assign io_mem_interface_M_Cmd = core_io_memPort_M_Cmd;
+  assign io_memBridgePins_M_DataByteEn = sramCtrl_io_memBridgePins_M_DataByteEn;
+  assign io_memBridgePins_M_DataValid = sramCtrl_io_memBridgePins_M_DataValid;
+  assign io_memBridgePins_M_Data = sramCtrl_io_memBridgePins_M_Data;
+  assign io_memBridgePins_M_Addr = sramCtrl_io_memBridgePins_M_Addr;
+  assign io_memBridgePins_M_Cmd = sramCtrl_io_memBridgePins_M_Cmd;
   assign io_comSpm_M_ByteEn = core_io_comSpm_M_ByteEn;
   assign io_comSpm_M_Data = core_io_comSpm_M_Data;
   assign io_comSpm_M_Addr = core_io_comSpm_M_Addr;
@@ -8595,9 +8757,7 @@ module Patmos(input clk, input reset,
   assign io_comConf_M_Data = core_io_comConf_M_Data;
   assign io_comConf_M_Addr = core_io_comConf_M_Addr;
   assign io_comConf_M_Cmd = core_io_comConf_M_Cmd;
-  assign io_dummy = core_io_dummy;
   PatmosCore core(.clk(clk), .reset(reset),
-       .io_dummy( core_io_dummy ),
        .io_comConf_M_Cmd( core_io_comConf_M_Cmd ),
        .io_comConf_M_Addr( core_io_comConf_M_Addr ),
        .io_comConf_M_Data( core_io_comConf_M_Data ),
@@ -8617,14 +8777,34 @@ module Patmos(input clk, input reset,
        .io_memPort_M_Data( core_io_memPort_M_Data ),
        .io_memPort_M_DataValid( core_io_memPort_M_DataValid ),
        .io_memPort_M_DataByteEn( core_io_memPort_M_DataByteEn ),
-       .io_memPort_S_Resp( io_mem_interface_S_Resp ),
-       .io_memPort_S_Data( io_mem_interface_S_Data ),
-       .io_memPort_S_CmdAccept( io_mem_interface_S_CmdAccept ),
-       .io_memPort_S_DataAccept( io_mem_interface_S_DataAccept ),
+       .io_memPort_S_Resp( sramCtrl_io_ocp_S_Resp ),
+       .io_memPort_S_Data( sramCtrl_io_ocp_S_Data ),
+       .io_memPort_S_CmdAccept( sramCtrl_io_ocp_S_CmdAccept ),
+       .io_memPort_S_DataAccept( sramCtrl_io_ocp_S_DataAccept ),
        .io_cpuInfoPins_id( io_cpuInfoPins_id ),
        .io_uartPins_tx( core_io_uartPins_tx ),
        .io_uartPins_rx( io_uartPins_rx ),
        .io_ledsPins_led( core_io_ledsPins_led )
+  );
+  MemBridge sramCtrl(
+       .io_ocp_M_Cmd( core_io_memPort_M_Cmd ),
+       .io_ocp_M_Addr( core_io_memPort_M_Addr ),
+       .io_ocp_M_Data( core_io_memPort_M_Data ),
+       .io_ocp_M_DataValid( core_io_memPort_M_DataValid ),
+       .io_ocp_M_DataByteEn( core_io_memPort_M_DataByteEn ),
+       .io_ocp_S_Resp( sramCtrl_io_ocp_S_Resp ),
+       .io_ocp_S_Data( sramCtrl_io_ocp_S_Data ),
+       .io_ocp_S_CmdAccept( sramCtrl_io_ocp_S_CmdAccept ),
+       .io_ocp_S_DataAccept( sramCtrl_io_ocp_S_DataAccept ),
+       .io_memBridgePins_M_Cmd( sramCtrl_io_memBridgePins_M_Cmd ),
+       .io_memBridgePins_M_Addr( sramCtrl_io_memBridgePins_M_Addr ),
+       .io_memBridgePins_M_Data( sramCtrl_io_memBridgePins_M_Data ),
+       .io_memBridgePins_M_DataValid( sramCtrl_io_memBridgePins_M_DataValid ),
+       .io_memBridgePins_M_DataByteEn( sramCtrl_io_memBridgePins_M_DataByteEn ),
+       .io_memBridgePins_S_Resp( io_memBridgePins_S_Resp ),
+       .io_memBridgePins_S_Data( io_memBridgePins_S_Data ),
+       .io_memBridgePins_S_CmdAccept( io_memBridgePins_S_CmdAccept ),
+       .io_memBridgePins_S_DataAccept( io_memBridgePins_S_DataAccept )
   );
 endmodule
 

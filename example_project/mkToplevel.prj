@@ -1,6 +1,0 @@
-verilog work "../FIFO2.v"
-verilog work "../SyncFIFO.v"
-verilog work "../mkBluetreeToOCP.v"
-verilog work "../mkBluetreeMux2.v"
-verilog work "../mkAxiConn.v"
-verilog work "../mkToplevel.v"

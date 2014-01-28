@@ -270,7 +270,6 @@ architecture toplevel of top is
 	component Patmos port (
 		clk : in std_logic; 
 		reset : in std_logic;
-      io_dummy : out std_logic_vector(31 downto 0);
       io_comConf_M_Cmd : out std_logic_vector(2 downto 0);
       io_comConf_M_Addr : out std_logic_vector(31 downto 0);
       io_comConf_M_Data : out std_logic_vector(31 downto 0);
@@ -285,15 +284,15 @@ architecture toplevel of top is
       io_comSpm_M_ByteEn : out std_logic_vector(3 downto 0);
       io_comSpm_S_Resp : in std_logic_vector(1 downto 0);
       io_comSpm_S_Data : in std_logic_vector(31 downto 0);
-      io_mem_interface_M_Cmd : out std_logic_vector(2 downto 0);
-      io_mem_interface_M_Addr : out std_logic_vector(31 downto 0);
-      io_mem_interface_M_Data : out std_logic_vector(31 downto 0);
-      io_mem_interface_M_DataValid : out std_logic;
-      io_mem_interface_M_DataByteEn : out std_logic_vector(3 downto 0);
-      io_mem_interface_S_Resp : in std_logic_vector(1 downto 0);
-      io_mem_interface_S_Data : in std_logic_vector(31 downto 0);
-      io_mem_interface_S_CmdAccept : in std_logic;
-      io_mem_interface_S_DataAccept : in std_logic;
+      io_memBridgePins_M_Cmd : out std_logic_vector(2 downto 0);
+      io_memBridgePins_M_Addr : out std_logic_vector(31 downto 0);
+      io_memBridgePins_M_Data : out std_logic_vector(31 downto 0);
+      io_memBridgePins_M_DataValid : out std_logic;
+      io_memBridgePins_M_DataByteEn : out std_logic_vector(3 downto 0);
+      io_memBridgePins_S_Resp : in std_logic_vector(1 downto 0);
+      io_memBridgePins_S_Data : in std_logic_vector(31 downto 0);
+      io_memBridgePins_S_CmdAccept : in std_logic;
+      io_memBridgePins_S_DataAccept : in std_logic;
       io_cpuInfoPins_id : in std_logic_vector(31 downto 0);
       io_uartPins_tx : out std_logic;
       io_uartPins_rx : in std_logic;
@@ -368,15 +367,15 @@ begin
     io_comSpm_M_ByteEn            => open,
     io_comSpm_S_Resp              => "00",
     io_comSpm_S_Data              => X"00000000",
-    io_mem_interface_M_Cmd        => pat_mcmd,
-    io_mem_interface_M_Addr       => pat_maddr,
-    io_mem_interface_M_Data       => pat_mdata,
-    io_mem_interface_M_DataValid  => pat_mdatavalid,
-    io_mem_interface_M_DataByteEn => pat_mbe,
-    io_mem_interface_S_Resp       => pat_sresp,
-    io_mem_interface_S_Data       => pat_sdata,
-    io_mem_interface_S_CmdAccept  => pat_scmdaccept,
-    io_mem_interface_S_DataAccept => pat_sdataaccept,
+    io_memBridgePins_M_Cmd        => pat_mcmd,
+    io_memBridgePins_M_Addr       => pat_maddr,
+    io_memBridgePins_M_Data       => pat_mdata,
+    io_memBridgePins_M_DataValid  => pat_mdatavalid,
+    io_memBridgePins_M_DataByteEn => pat_mbe,
+    io_memBridgePins_S_Resp       => pat_sresp,
+    io_memBridgePins_S_Data       => pat_sdata,
+    io_memBridgePins_S_CmdAccept  => pat_scmdaccept,
+    io_memBridgePins_S_DataAccept => pat_sdataaccept,
     io_cpuInfoPins_id             => X"00000001",
     io_uartPins_tx                => open,
     io_uartPins_rx                => '0',

@@ -136,68 +136,22 @@ at 0 ps, Instance /top_tb/uut/bram_inst/U0/axi_mem_module/axi_rd_sm/axi_read_fsm
 at 0 ps, Instance /top_tb/uut/bram_inst/U0/axi_mem_module/axi_rd_sm/axi_read_fsm/Mmux_gaxi_full_sm_ar_ready_c14_G/ : Warning: CONV_INTEGER: There is an 'U'|'X'|'W'|'Z'|'-' in an arithmetic operand, and it has been converted to 0.
 at 0 ps, Instance /top_tb/uut/bram_inst/U0/axi_mem_module/axi_rd_sm/axi_read_fsm/Mmux_S_AXI_R_LAST1_G/ : Warning: CONV_INTEGER: There is an 'U'|'X'|'W'|'Z'|'-' in an arithmetic operand, and it has been converted to 0.
 at 0 ps, Instance /top_tb/uut/bram_inst/U0/axi_mem_module/axi_rd_sm/ : Warning: CONV_INTEGER: There is an 'U'|'X'|'W'|'Z'|'-' in an arithmetic operand, and it has been converted to 0.
-Start write to address 0x0000000 D 0x00000000000000000000000000000000 BEN 0x0000
-Continue write, D 0xabcd1234000000000000000000000000, BEN 0xf000
-Continue write, D 0x00000000abcd12340000000000000000, BEN 0x0f00
-Continue write, D 0x0000000000000000abcd123400000000, BEN 0x00f0
-Write complete, dispatching
-AxiConn ts                   23 start_write                    12379570965258960896   240          0
-at 1490 ns(1): Note: Block Memory Generator CORE Generator module is using a behavioral model FOR simulation which will not precisely model memory collision behavior. (/top_tb/uut/bram_inst/U0/axi_mem_module/mem_module/).
-AxiConn ts                   27 write_complete
-Handing read to addr 0x00000000
-AxiConn ts                   52 start_read          0  0
-AxiConn ts                   54 read                    12379570965258960896
-Handing read to addr 0x00000000
-AxiConn ts                   83 start_read          0  0
-AxiConn ts                   85 read                    12379570965258960896
-Handing read to addr 0x00000000
-AxiConn ts                  114 start_read          0  0
-AxiConn ts                  116 read                    12379570965258960896
-Handing read to addr 0x00000000
-AxiConn ts                  145 start_read          0  0
-AxiConn ts                  147 read                    12379570965258960896
-Handing read to addr 0x00000000
-AxiConn ts                  176 start_read          0  0
-AxiConn ts                  178 read                    12379570965258960896
+Stopped at time : 226750 ns : File "/home/jg/blueshell/raw_tree/bluetree/Patmos.v" Line 4471
+# run all
 Start write to address 0x0000000 D 0x00000000000000000000000000000000 BEN 0x0000
 Continue write, D 0x00000000000000000000000000000000, BEN 0x0000
-Continue write, D 0x12000012000000000000000000000000, BEN 0x8000
-Continue write, D 0x00000000120000120000000000000000, BEN 0x0800
+Continue write, D 0x00000043000000000000000000000000, BEN 0xf000
+Continue write, D 0x00000000000000430000000000000000, BEN 0x0f00
 Write complete, dispatching
-AxiConn ts                  212 start_write            5570730508825604563817988096  2048          0
-AxiConn ts                  216 write_complete
-Handing read to addr 0x00000000
-AxiConn ts                  241 start_read          0  0
-AxiConn ts                  243 read            5570730189163782202305019904
+AxiConn ts                32060 start_write                  1235931852938539958272  3840          0
+at 642230 ns(1): Note: Block Memory Generator CORE Generator module is using a behavioral model FOR simulation which will not precisely model memory collision behavior. (/top_tb/uut/bram_inst/U0/axi_mem_module/mem_module/).
+AxiConn ts                32064 write_complete
 Start write to address 0x0000000 D 0x00000000000000000000000000000000 BEN 0x0000
 Continue write, D 0x00000000000000000000000000000000, BEN 0x0000
-Continue write, D 0x00340034000000000000000000000000, BEN 0x4000
-Continue write, D 0x00000000003400340000000000000000, BEN 0x0400
-Write complete, dispatching
-AxiConn ts                  276 start_write              62865101850652549981405184  1024          0
-AxiConn ts                  280 write_complete
-Handing read to addr 0x00000000
-AxiConn ts                  305 start_read          0  0
-AxiConn ts                  307 read            5633594331783742919389741056
-Start write to address 0x0000000 D 0x00000000000000000000000000000000 BEN 0x0000
 Continue write, D 0x00000000000000000000000000000000, BEN 0x0000
-Continue write, D 0x00004545000000000000000000000000, BEN 0x2000
-Continue write, D 0x00000000000045450000000000000000, BEN 0x0200
+Continue write, D 0x00000044000000000000000000000000, BEN 0xf000
 Write complete, dispatching
-AxiConn ts                  340 start_write                327116112659091478806528   512          0
-AxiConn ts                  344 write_complete
-Handing read to addr 0x00000000
-AxiConn ts                  369 start_read          0  0
-AxiConn ts                  371 read            5633920175071060924909486080
-Start write to address 0x0000000 D 0x00000000000000000000000000000000 BEN 0x0000
-Continue write, D 0x00000000000000000000000000000000, BEN 0x0000
-Continue write, D 0x00000067000000000000000000000000, BEN 0x1000
-Continue write, D 0x00000000000000670000000000000000, BEN 0x0100
-Write complete, dispatching
-AxiConn ts                  404 start_write                  1900014639592083816448   256          0
-AxiConn ts                  408 write_complete
-Handing read to addr 0x00000000
-AxiConn ts                  433 start_read          0  0
-AxiConn ts                  435 read            5633922075085700516993302528
-Stopped at time : 234700 ns : File "/home/jg/blueshell/raw_tree/bluetree/example_project/top_tb.vhd" Line 82
+AxiConn ts                48108 start_write         5387515050969974956360988622848 61440          0
+AxiConn ts                48112 write_complete
+Stopped at time : 1040990 ns : File "/home/jg/blueshell/raw_tree/bluetree/FIFO2.v" Line 115
 # exit 0
