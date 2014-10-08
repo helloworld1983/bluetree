@@ -1,0 +1,105 @@
+package ToplevelBT64;
+import GetPut::*;
+import Connectable::*;
+import FIFO::*;
+import ClientServer::*;
+import Bluetree::*;
+import BluetreeProxy::*;
+import Clocks::*;
+import BluetreeFlipMux2::*;
+
+import Patmos::*;
+import PatmosL0::*;
+import Vector::*;
+import AxiConn::*;
+import Axi::*;
+
+`include "Axi.defines"
+
+`define WIDTH       5
+`define HEIGHT      4
+`define XPMC_NODES  63
+`define CPUS        64
+
+// Stolen from AxiConn.bsv - find a better way to do this.
+`define MY_AXI_PRM_STD 4, 32, 128, 10, AxiCustom
+`define MY_AXI_RR_STD TLMRequest#(`MY_AXI_PRM_STD), TLMResponse#(`MY_AXI_PRM_STD) 
+`define MY_AXI_XTR_STD `MY_AXI_RR_STD, `MY_AXI_PRM_STD
+
+interface IfcToplevelBT;
+    interface BluetreeClient client;
+    interface Vector#(`CPUS, OcpBurstSlave) procs;
+endinterface
+
+interface IfcBluetreeToOCP;
+    interface BluetreeClient bluetree;
+    interface OcpBurstSlave  slave;
+endinterface
+
+(* synthesize *)
+module mkBluetreeToOCP(IfcBluetreeToOCP);
+    OcpBurstBridge bridge <- mkOcpBurstBridge();
+    BluetreeClient client <- mkPatmosTreeClient(bridge.master);
+    
+    interface bluetree = client;
+    interface slave = bridge.slave;
+endmodule
+
+(* synthesize *)
+module mkToplevelBT64 (Clock mem_clock, Reset mem_resetn, IfcToplevelBT ifc);
+    // Bluetree tree structure
+    IfcBluetreeMux2 mux[`XPMC_NODES];
+    Integer i;
+    for (i = 0; i < `XPMC_NODES; i = i + 1) begin
+//        mux[i] <- mkBluetreeMux2();
+          mux[i] <- mkBluetreeFlipMux2(2, False, False);
+    end
+    
+    Vector#(`CPUS, BluetreeClient) proc_bt_clients;
+    Vector#(`CPUS, IfcBluetreeToOCP) bridges;
+    Vector#(`CPUS, OcpBurstSlave) slaves;
+  
+    // CPUs
+    for (i = 0; i < `CPUS; i = i + 1) begin
+	bridges[i] <- mkBluetreeToOCP;
+	slaves[i] = bridges[i].slave;
+	proc_bt_clients[i] = bridges[i].bluetree;
+    end
+
+    // XPMC structure
+   // Connect up the first 16 MBlazes
+   Integer toCreate;
+   Integer parent = 0;
+   Integer baseId = 1;
+   
+   for(toCreate = 2; toCreate < 16; toCreate = toCreate * 2) begin
+      for(i = 0; i < toCreate; i = i + 2) begin
+	 mkConnection(mux[baseId + i + 0].client, mux[parent].server0);
+	 mkConnection(mux[baseId + i + 1].client, mux[parent].server1);
+	 
+	 parent = parent + 1;
+      end      
+      baseId = baseId + toCreate;
+   end
+    
+    // And the cpus...
+   for(i = 0; i < 16; i = i + 2) begin
+      // Now, parent should be pointing to the last row of Bluetree. Hopefully.
+//      mkConnection(proc_bt_clients[i + 0], mux[parent].server0);
+//      mkConnection(proc_bt_clients[i + 1], mux[parent].server1);
+       
+       mkConnection(mux[parent].server0, proc_bt_clients[i+0]);
+       mkConnection(mux[parent].server1, proc_bt_clients[i+1]);
+       
+      parent = parent + 1;
+   end
+    
+    BluetreeClient pclient <- mkBluetreeProxy(
+                mux[0].client, mem_clock, mem_resetn);
+    
+    // External links
+    interface procs = slaves;
+    interface client = pclient;
+endmodule
+
+endpackage

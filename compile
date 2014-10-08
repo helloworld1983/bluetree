@@ -1,0 +1,4 @@
+#!/bin/bash -xe
+bsc -u -verilog Toplevel.bsv
+bsc -u -verilog ToplevelBT.bsv
+bsc +RTS -K134217728 -RTS -u -verilog ToplevelBT64.bsv
